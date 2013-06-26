@@ -10,12 +10,11 @@ layout: default
     <li>Use on its own or as a front end to <a href="http://www.rabbitmq.com/">RabbitMQ</a></li>
 </ul>
 
-<p>The following example creates a database and queue and configures it to output to RabbitMQ:</p>
+<p>The following example creates a queue and configures it to output to RabbitMQ:</p>
 
 {% highlight bash %}
-$ curl -XPOST http://127.0.0.1:9554/db/acme
-$ curl -XPOST http://127.0.0.1:9554/db/acme/q/incoming
-$ curl -XPOST http://127.0.0.1:9554/db/acme/q/incoming/out/rabbit \
+$ curl -XPOST http://127.0.0.1:9554/q/incoming
+$ curl -XPOST http://127.0.0.1:9554/q/incoming/out/rabbit \
     -d type=rabbitmq -d url=amqp://127.0.0.1 -d exchange=incoming
 # these operations are idempotent i.e. if the object already exists it is updated
 {% endhighlight %}
@@ -23,16 +22,16 @@ $ curl -XPOST http://127.0.0.1:9554/db/acme/q/incoming/out/rabbit \
 <p>Its easy to POST messages to the queue:</p>
 
 {% highlight bash %}
-$ curl -XPOST http://127.0.0.1:9554/db/acme/q/incoming/messages?routingKey=abc -d @message.json
+$ curl -XPOST http://127.0.0.1:9554/q/incoming/messages?routingKey=abc -d @message.json
 # the contents of message.json are now in RabbitMQ
 {% endhighlight %}
 
 <p>And stream them out again or redeliver:</p>
 
 {% highlight bash %}
-$ curl http://127.0.0.1:9554/db/acme/q/incoming/messages?at=10:13
+$ curl http://127.0.0.1:9554/q/incoming/messages?at=10:13
 # messages since 10:13 today are streamed to the console
-$ curl -XPOST http://127.0.0.1:9554/db/acme/q/incoming/out/rabbit -d at=2013-06-24
+$ curl -XPOST http://127.0.0.1:9554/q/incoming/out/rabbit -d at=2013-06-24
 # messages since 24 June 2013 are redelivered to RabbitMQ
 {% endhighlight %}
 
