@@ -1,6 +1,26 @@
 ---
 layout: default
 title: Documentation
+release: 0.1.0-SNAPSHOT
 ---
 
-<h1>Download</h1>
+<h1>Download &amp; Installation</h1>
+
+<p>The latest release is {{page.release}}. It should be considered alpha quality.</p>
+
+<h2>Ubuntu & Debian</h2>
+
+<p>Install <a href="http://downloads.qdb.io/qdb-server_{{ page.release }}.deb">qdb-server_{{ page.release }}.deb</a>.
+This includes init scripts, creates a qdb user and so on.</p>
+
+{% highlight bash %}
+$ wget http://downloads.qdb.io/qdb-server_{{ page.release }}.deb
+$ sudo apt-get install openjdk-7-jdk
+$ sudo dpkg -i qdb-server_{{ page.release }}.deb
+$ tail -f /var/log/qdb/qdb.log
+{% endhighlight %}
+
+<h2>Generic</h2>
+
+<p>Install Java 6 or 7, unpack <a href="http://downloads.qdb.io/qdb-server-{{ page.release }}.tgz">qdb-server-{{ page.release }}.tgz</a>
+    somewhere and run start.sh (to start QDB in the background) or run.sh to run it in the foreground.</p>
