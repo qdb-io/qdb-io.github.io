@@ -1,0 +1,47 @@
+---
+layout: default
+title: Configuration
+---
+
+<h1>Configuration</h1>
+
+<p>QDB configuration is optional. The defaults launch a server listening on 127.0.0.1:9554 with no security. This
+is appropriate for many applications. On startup QDB looks for a qdb.conf or qdb.properties file in /etc and the
+current directory with settings the latter having priority. Example /etc/qdb.properties:</p>
+
+{% highlight properties %}
+host = 127.0.0.1
+port = 9554
+dataDir = data
+initialAdminPassword = admin
+{% endhighlight %}
+
+<p>For an up-to-date listing of configuration properties and default values please look at
+<a href="https://github.com/qdb-io/qdb-server/blob/master/src/main/resources/qdb-default.conf">qdb-default.conf</a>
+in the source code.</p>
+
+<h2><a name="java_options"></a>Java Options</h2>
+
+<p>The startup scripts define QDB_SERVER_OPTS="-server" and source /etc/default/qdb for overrides. These options
+are passed to the "java" command that runs QDB. You might want to configure memory usage. Example /etc/default.qdb:</p>
+
+{% highlight bash %}
+# Start with 64m heap
+QDB_SERVER_OPTS="-server -Xmx64m -Xms64m -XX:+UseCompressedOops"
+{% endhighlight %}
+
+<h2><a name="logging"></a>Logging</h2>
+
+<p>QDB logs messages to the console by default, which the startup scripts redirect to /var/log/qdb/qdb.log
+(Linux) or to ./qdb.log (Generic). GELF logging to a <a href="http://graylog2.org/">Graylog2</a> server is also
+supported. Sample /etc/qdb.properties:</p>
+
+{% highlight properties %}
+# Port is optional, default is 12201 (Graylog2 default)
+graylog2=graylog2.acme.com:12345
+# Default is 0.9.6
+graylog2ServerVersion=0.9.6
+# Only INFO, WARN and ERROR messages are sent to Graylog2, DEBUG only to console
+logLevel=DEBUG
+# Default logLevel is INFO
+{% endhighlight %}

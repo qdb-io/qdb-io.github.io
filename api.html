@@ -1,0 +1,122 @@
+---
+layout: default
+title: REST API
+---
+
+<h1><a name="rest_api"></a>REST API</h1>
+
+<p>The QDB API follows RESTful principles and you don't need any driver libraries to communicate with it. HTTP POST
+does create or update, PUT does update only, DELETE deletes stuff and GET retrieves resources. All endpoints accept
+JSON data and/or URL-encoded form data and most return JSON. The examples in this documentation use
+<a href="http://curl.haxx.se/">curl</a>, a utility for making HTTP requests from the command line.</p>
+
+{% highlight bash %}
+# create or update a queue "foo" with max size of 100 gb
+$ curl -XPOST http://127.0.0.1:9554/q/foo -d maxSize=100g
+# do the same but using a JSON document foo.json: { "maxSize": "100g" }
+$ curl -XPOST -H "Content-Type: application/json" http://127.0.0.1:9554/q/foo -d @foo.json
+{% endhighlight %}
+
+<p>The usual <a href="http://en.wikipedia.org/wiki/List_of_HTTP_status_codes">HTTP status codes</a> are used.
+POST requests that actually create something return 201 (created), those that just do an update return 200 (ok).
+POST and PUT requests both only update fields supplied in the request and leave others as is. A full JSON
+representation of the object is returned. Well-formed requests with validation errors return 422 (unprocessable
+entity). If a version number is supplied with a request and the version of the object currently on the server is
+different then a 409 (conflict) is returned.</p>
+
+<p>QDB returns sizes as human readable strings. You can get number byte values instead by turning on borg mode:</p>
+
+{% highlight bash %}
+$ curl http://127.0.0.1:9554/q/foo
+{
+    "id" : "foo",
+    "version" : 1,
+    "maxSize" : "100 GB",
+    "maxPayloadSize" : "1 MB",
+    "contentType" : "application/octet-stream"
+}
+$ curl http://127.0.0.1:9554/q/foo?borg=true
+{
+    ...
+    "maxSize" : 107374182400,
+    "maxPayloadSize" : 1048576,
+}
+{% endhighlight %}
+
+<p>QDB supports HTTP keep-alive so repeated calls to the server can be done using the same connection.</p>
+
+<h2><a name="server"></a>Server Status</h2>
+
+{% highlight bash %}
+# is all well in the world of qdb?
+$ curl http://127.0.0.1:9554
+{% endhighlight %}
+
+<h2><a name="queues"></a>Queues</h2>
+
+<p>QDB queues are ring buffers with a configurable maximum size. When a queue is full the oldest messages are
+efficiently deleted in chunks. QDB supports fast retrieval of messages by ID and timestamp. Queues can have
+<a href="#outputs">outputs</a> which automatically send messages somewhere else (e.g. to RabbitMQ).</p>
+
+{% highlight bash %}
+# create queue "incoming" with capacity of 200 gb and max message size of 10 mb
+$ curl -XPOST http://127.0.0.1:9554/q/incoming -d maxSize=200g -d maxPayloadSize=10m
+# the contentType of a queue is used when retrieving individual messages
+$ curl -XPOST http://127.0.0.1:9554/q/incoming -d contentType="application/jsonx; charset=utf-8"
+{% endhighlight %}
+
+<h3><a name="appending"></a>Appending Messages</h3>
+
+<p>Messages can be POSTed individually or in bulk. Each message may have an optional "routingKey" string, is
+timestamped and assigned a unique id. The message itself can be any binary or text data. Message are not
+consecutive but newer messages always have bigger id's than older messages.</p>
+
+{% highlight bash %}
+$ curl -XPOST http://127.0.0.1:9554/q/incoming/messages?routingKey=abc:def -d @message.dat
+{
+  "id" : 44,
+  "timestamp" : "2013-07-07T23:13:29.277+0200",
+  "payloadSize" : 100,
+  "routingKey" : "abc:def"
+}
+{% endhighlight %}
+
+<h3><a name="retrieving"></a>Retrieving Messages</h3>
+
+<p>Messages can be retrieved by id or timestamp.</p>
+
+<h2><a name="outputs"></a>Outputs</h2>
+
+<p>Outputs are attached to queues and do something with incoming messages (e.g. publish them to a RabbitMQ
+exchange).</p>
+
+<h2><a name="databases"></a>Databases</h2>
+
+<p>Queues in QDB are grouped into databases. There is a database called "default" that is assumed when
+no database is specified, which is why these two calls return information about the same queue (foo):</p>
+
+{% highlight bash %}
+$ curl http://127.0.0.1:9554/q/foo
+$ curl http://127.0.0.1:9554/db/default/q/foo
+{% endhighlight %}
+
+<h2><a name="security"></a>Security & Users</h2>
+
+<p>QDB uses HTTP basic authentication. The QDB server creates a user called "admin" on startup with full access
+to everything. The default password for the "admin" user is "admin" unless it is changed in the
+<a href="#configuration">configuration file</a> or after startup using the API. If no authentication information
+is supplied then admin:admin is assumed. Non-admin users can only access databases they own.</p>
+
+{% highlight bash %}
+# create an admin user "david" with password "secret"
+$ curl -XPOST http://127.0.0.1:9554/users/david -d admin=true -d password=secret
+# list all users
+$ curl http://127.0.0.1:9554/users
+# get details of the "david" user
+$ curl http://127.0.0.1:9554/users/david
+# authenticate as "david" and list all database visible to "david"
+$ curl --user david:secret http://127.0.0.1:9554/db
+# change the password for the "admin" user
+$ curl -XPOST http://127.0.0.1:9554/users/admin -d password=oink
+{% endhighlight %}
+
