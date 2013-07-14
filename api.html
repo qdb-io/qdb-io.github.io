@@ -17,14 +17,8 @@ $ curl -XPOST http://127.0.0.1:9554/q/foo -d maxSize=100g
 $ curl -XPOST -H "Content-Type: application/json" http://127.0.0.1:9554/q/foo -d @foo.json
 {% endhighlight %}
 
-<p>The usual <a href="http://en.wikipedia.org/wiki/List_of_HTTP_status_codes">HTTP status codes</a> are used.
-POST requests that actually create something return 201 (created), those that just do an update return 200 (ok).
-POST and PUT requests both only update fields supplied in the request and leave others as is. A full JSON
-representation of the object is returned. Well-formed requests with validation errors return 422 (unprocessable
-entity). If a version number is supplied with a request and the version of the object currently on the server is
-different then a 409 (conflict) is returned.</p>
-
-<p>QDB returns sizes as human readable strings. You can get number byte values instead by turning on borg mode:</p>
+<p>QDB returns sizes as human readable strings using binary suffixes (1 MB = 1048576 bytes). You can get number
+byte values instead by turning on borg mode:</p>
 
 {% highlight bash %}
 $ curl http://127.0.0.1:9554/q/foo
@@ -43,13 +37,29 @@ $ curl http://127.0.0.1:9554/q/foo?borg=true
 }
 {% endhighlight %}
 
+<p>The usual <a href="http://en.wikipedia.org/wiki/List_of_HTTP_status_codes">HTTP status codes</a> are used.
+    POST requests that actually create something return 201 (created), those that just do an update return 200 (ok).
+    POST and PUT requests both only update fields supplied in the request and leave others as is. A full JSON
+    representation of the object is returned. Well-formed requests with validation errors return 422 (unprocessable
+    entity). If a version number is supplied with a request and the version of the object currently on the server is
+    different then a 409 (conflict) is returned.</p>
+
 <p>QDB supports HTTP keep-alive so repeated calls to the server can be done using the same connection.</p>
 
 <h2><a name="server"></a>Server Status</h2>
 
 {% highlight bash %}
 # is all well in the world of qdb?
-$ curl http://127.0.0.1:9554
+$ curl http://127.0.0.1:9554/status
+{
+    "uptime" : "15 days 8:22:04",
+    "heapFreeMemory" : "10.86 MB",
+    "heapMaxMemory" : "15.06 MB",
+    "otherFreeMemory" : "60.01 MB",
+    "otherMaxMemory" : "80 MB"
+}
+# use gc=true to garbage collect for more accurate free memory info
+$ curl http://127.0.0.1:9554/status?gc=true
 {% endhighlight %}
 
 <h2><a name="queues"></a>Queues</h2>
@@ -62,16 +72,17 @@ efficiently deleted in chunks. QDB supports fast retrieval of messages by ID and
 # create queue "incoming" with capacity of 200 gb and max message size of 10 mb
 $ curl -XPOST http://127.0.0.1:9554/q/incoming -d maxSize=200g -d maxPayloadSize=10m
 # the contentType of a queue is used when retrieving individual messages
-$ curl -XPOST http://127.0.0.1:9554/q/incoming -d contentType="application/jsonx; charset=utf-8"
+$ curl -XPOST http://127.0.0.1:9554/q/incoming -d contentType="application/json; charset=utf-8"
 {% endhighlight %}
 
 <h3><a name="appending"></a>Appending Messages</h3>
 
-<p>Messages can be POSTed individually or in bulk. Each message may have an optional "routingKey" string, is
-timestamped and assigned a unique id. The message itself can be any binary or text data. Message are not
-consecutive but newer messages always have bigger id's than older messages.</p>
+<p>Messages can be POSTed individually or in bulk. Each message may have an optional routing key string (max 255
+characters), is timestamped and assigned a unique id. The message itself can be any binary or text data. Message id's
+are not consecutive but newer messages always have bigger id's than older messages.</p>
 
 {% highlight bash %}
+# append a single message with payload from message.dat (the body of the POST)
 $ curl -XPOST http://127.0.0.1:9554/q/incoming/messages?routingKey=abc:def -d @message.dat
 {
   "id" : 44,
@@ -81,13 +92,121 @@ $ curl -XPOST http://127.0.0.1:9554/q/incoming/messages?routingKey=abc:def -d @m
 }
 {% endhighlight %}
 
+<p>POSTing individual mentions can be quite fast (2000-3000 messages/sec on an 2011 MacBook Pro, each message 0-4k in
+size) because QDB supports HTTP keep-alive. If you need more performance POST messages in batches by specifying
+multiple=true.</p>
+
+<p>QBD uses a variation of <a href="http://en.wikipedia.org/wiki/Netstrings">netstrings</a> to encode the
+routing key and payload of message in a batch. The routing key is prefixed by its size in bytes in decimal ASCII digits
+followed by a colon and the UTF8 encoded string and a linefeed (\n, ASCII 10). The payload is prefixed with its size in bytes
+followed by a colon and the actual byte data and a linefeed. Extra linefeeds are ignored. Example (batch.txt):</p>
+
+{% highlight text %}
+3:one
+12:Hello world!
+7:one:two
+26:The payload is binary data
+{% endhighlight %}
+
+<p>QDB returns an array of JSON objects, one for each message appended:</p>
+
+{% highlight bash %}
+$ curl -XPOST http://127.0.0.1:9554/q/incoming/messages?multiple=true -d @batch.txt
+[ {
+  "id" : 30,
+  "timestamp" : "2013-07-14T19:47:21.241+0200",
+  "payloadSize" : "12 bytes",
+  "routingKey" : "one"
+}, {
+  "id" : 60,
+  "timestamp" : "2013-07-14T19:47:21.241+0200",
+  "payloadSize" : "26 bytes",
+  "routingKey" : "one:two"
+} ]
+{% endhighlight %}
+
+<p>If there is an error then appending stops at the first failed message. The created field in the JSON error
+response identifies the successfully appended messages:</p>
+
+{% highlight bash %}
+$ curl -XPOST "http://127.0.0.1:9554/q/incoming/messages?multiple=true" -d @batch.txt
+{
+  "responseCode" : 422,
+  "message" : "Expected 27 bytes, only read 26 while reading payload",
+  "created" : [ {
+    "id" : 0,
+    "timestamp" : "2013-07-14T19:45:56.743+0200",
+    "payloadSize" : "12 bytes",
+    "routingKey" : "one"
+  } ]
+}
+{% endhighlight %}
+
+<p>QDB can append 5000-6000 messages/sec, each 0-4k in size on a 2011 MBP using batches of 50.</p>
+
 <h3><a name="retrieving"></a>Retrieving Messages</h3>
 
-<p>Messages can be retrieved by id or timestamp.</p>
+<p>Old messages can be efficiently retrieved by id or timestamp and new messages streamed as they arrive:</p>
+
+{% highlight bash %}
+# Dump new messages to the console until ctrl-C
+$ curl http://127.0.0.1:9554/q/incoming/messages
+88:{"id":30,"timestamp":"2013-07-14T19:47:21.241+0200","payloadSize":12,"routingKey":"one"}
+Hello world!
+92:{"id":60,"timestamp":"2013-07-14T19:47:21.241+0200","payloadSize":26,"routingKey":"one:two"}
+The payload is binary data
+{% endhighlight %}
+
+<p>Each messages is prefixed with a single line JSON header preceded by its size in bytes in decimal ASCII digits
+(see <a href="http://en.wikipedia.org/wiki/Netstrings">netstrings</a>) and a colon, followed by a linefeed
+(\n, ASCII 10). The binary payload immediately follows the header and is followed by a linefeed. QDB will write extra
+linefeeds every 29 seconds if there are no new messages to keep the connection alive. The Content-Type of the response
+is application/octet-stream.</p>
+
+<p></p>
+
+<p>This endpoint supports a number of other optional parameters shown with the default values:</p>
+
+<div class="param-table">
+    <table class="table table-condensed">
+        <tbody>
+        <tr>
+            <td>limit</td>
+            <td>unlimited</td>
+            <td>Stop after returning this many messages</td>
+        </tr>
+        <tr>
+            <td>noHeaders</td>
+            <td>false</td>
+            <td>Don't send the header JSON</td>
+        </tr>
+        <tr>
+            <td>noLengthPrefix</td>
+            <td>false</td>
+            <td>Don't prefix the header JSON with its length</td>
+        </tr>
+        <tr>
+            <td>timeoutMs</td>
+            <td>29000</td>
+            <td>Send a keep alive (linefeed) every this many milliseconds if no messages are available</td>
+        </tr>
+        <tr>
+            <td>keepAlive</td>
+            <td>\n</td>
+            <td>The string sent to keep the connection alive (can be multiple characters)</td>
+        </tr>
+        <tr>
+            <td>separator</td>
+            <td>\n</td>
+            <td>The string sent immediately after each payload (can be multiple characters)</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
 
 <h2><a name="outputs"></a>Outputs</h2>
 
-<p>Outputs are attached to queues and do something with incoming messages (e.g. publish them to a RabbitMQ
+<p>Outputs are attached to queues and do something with incoming or existing messages (e.g. publish them to a RabbitMQ
 exchange).</p>
 
 <h2><a name="databases"></a>Databases</h2>
