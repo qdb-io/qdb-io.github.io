@@ -146,7 +146,24 @@ $ curl -XPOST "http://127.0.0.1:9554/q/incoming/messages?multiple=true" -d @batc
 
 <h3><a name="retrieving"></a>Retrieving Messages</h3>
 
-<p>Old messages can be efficiently retrieved by id or timestamp and new messages streamed as they arrive:</p>
+<p>Old and incoming messages can be efficiently retrieved by id or timestamp, one at a time or streamed.
+Specify single=true to retrieve a single message as the body of the response. The Content-Length is the size in
+bytes of the message payload. The Content-Type is the "contentType" parameter of the queue:</p>
+
+{% highlight bash %}
+# the timestamp, routing key and id are returned via QDB-* headers
+$ curl -v "http://127.0.0.1:9554/q/incoming/messages?single=true&id=30"
+...
+< Content-Type: application/octet-stream
+< QBD-Timestamp: 2013-07-14T19:47:21.241+0200
+< QDB-RoutingKey: one
+< Content-Length: 12
+< QDB-Id: 30
+...
+Hello world!
+{% endhighlight %}
+
+<p>Multiple Messages can be streamed as they come in or from a past id or timestamp:</p>
 
 {% highlight bash %}
 # Dump new messages to the console until ctrl-C
