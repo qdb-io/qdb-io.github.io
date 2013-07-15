@@ -17,8 +17,8 @@ $ curl -XPOST http://127.0.0.1:9554/q/foo -d maxSize=100g
 $ curl -XPOST -H "Content-Type: application/json" http://127.0.0.1:9554/q/foo -d @foo.json
 {% endhighlight %}
 
-<p>QDB returns sizes as human readable strings using binary suffixes (1 MB = 1048576 bytes). You can get number
-byte values instead by turning on borg mode:</p>
+<p>QDB returns sizes as human readable strings using binary suffixes (1 MB = 1048576 bytes) and dates as ISO8601
+with timezone. You can get number byte values and dates as milliseconds since 1970 by turning on borg mode:</p>
 
 {% highlight bash %}
 $ curl http://127.0.0.1:9554/q/foo
@@ -65,8 +65,9 @@ $ curl http://127.0.0.1:9554/status?gc=true
 <h2><a name="queues"></a>Queues</h2>
 
 <p>QDB queues are ring buffers with a configurable maximum size. When a queue is full the oldest messages are
-efficiently deleted in chunks. QDB supports fast retrieval of messages by ID and timestamp. Queues can have
-<a href="#outputs">outputs</a> which automatically send messages somewhere else (e.g. to RabbitMQ).</p>
+efficiently deleted in chunks. QDB supports fast retrieval of messages by ID and timestamp from any point in the
+buffer/queue. Queues can have <a href="#outputs">outputs</a> which automatically send messages somewhere else
+(e.g. to RabbitMQ).</p>
 
 {% highlight bash %}
 # create queue "incoming" with capacity of 200 gb and max message size of 10 mb
@@ -155,13 +156,70 @@ bytes of the message payload. The Content-Type is the "contentType" parameter of
 $ curl -v "http://127.0.0.1:9554/q/incoming/messages?single=true&id=30"
 ...
 < Content-Type: application/octet-stream
-< QBD-Timestamp: 2013-07-14T19:47:21.241+0200
+< QDB-Timestamp: 2013-07-14T19:47:21.241+0200
 < QDB-RoutingKey: one
 < Content-Length: 12
 < QDB-Id: 30
 ...
 Hello world!
+# Fetch the first message received on or after 19h47 today
+$ curl "http://127.0.0.1:9554/q/incoming/messages?single=true&from=19:47"
+Hello world!
 {% endhighlight %}
+
+<p>A number of different date/time formats are supported:</p>
+
+<div class="param-table">
+    <table class="table table-condensed">
+        <tbody>
+        <tr>
+            <td>yyyy-MM-dd'T'HH:mm:ss.SSSZ</td>
+            <td>2013-07-15T17:26:42.491+0200</td>
+            <td>Full date, time and milliseconds with timezone</td>
+        </tr>
+        <tr>
+            <td>yyyy-MM-dd'T'HH:mm:ss.SSS</td>
+            <td>2013-07-15T17:26:42.491</td>
+            <td>Timezone is that of the server</td>
+        </tr>
+        <tr>
+            <td>yyyy-MM-dd'T'HH:mm:ssZ</td>
+            <td>2013-07-15T17:26:42+0200</td>
+            <td>Full date and time with timezone</td>
+        </tr>
+        <tr>
+            <td>yyyy-MM-dd'T'HH:mm:ss</td>
+            <td>2013-07-15T17:26:42</td>
+            <td>Timezone is that of the server</td>
+        </tr>
+        <tr>
+            <td>yyyy-MM-dd'T'HH:mm</td>
+            <td>2013-07-15T17:26</td>
+            <td>No secs, timezone is that of the server</td>
+        </tr>
+        <tr>
+            <td>yyyy-MM-dd</td>
+            <td>2013-07-15</td>
+            <td>Date only, timezone is that of the server</td>
+        </tr>
+        <tr>
+            <td>HH:mm:ss</td>
+            <td>17:26:42</td>
+            <td>That time today in servers timezone</td>
+        </tr>
+        <tr>
+            <td>HH:mm</td>
+            <td>17:26</td>
+            <td>That time today in servers timezone</td>
+        </tr>
+        <tr>
+            <td>[0-9]+</td>
+            <td>1373824041241</td>
+            <td>Milliseconds since 1970</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
 
 <p>Multiple Messages can be streamed as they come in or from a past id or timestamp:</p>
 
@@ -179,8 +237,6 @@ The payload is binary data
 (\n, ASCII 10). The binary payload immediately follows the header and is followed by a linefeed. QDB will write extra
 linefeeds every 29 seconds if there are no new messages to keep the connection alive. The Content-Type of the response
 is application/octet-stream.</p>
-
-<p></p>
 
 <p>This endpoint supports a number of other optional parameters shown with the default values:</p>
 
@@ -204,6 +260,11 @@ is application/octet-stream.</p>
         </tr>
         <tr>
             <td>timeoutMs</td>
+            <td>0 (forever)</td>
+            <td>Stop if no message is received for this many milliseconds</td>
+        </tr>
+        <tr>
+            <td>keepAliveMs</td>
             <td>29000</td>
             <td>Send a keep alive (linefeed) every this many milliseconds if no messages are available</td>
         </tr>
@@ -220,6 +281,42 @@ is application/octet-stream.</p>
         </tbody>
     </table>
 </div>
+
+<h3><a name="timelines"></a>Timelines</h3>
+
+<p>QBD maintains an efficient index of each queue by timestamp and message id. You can peek at this index using the
+timelines endpoint:</p>
+
+{% highlight bash %}
+$ curl http://127.0.0.1:9554/q/foo/timeline
+[ {
+  "id" : 0,
+  "timestamp" : "2013-07-15T17:49:38.271+0200",
+  "bytes" : 50,
+  "millis" : 20628,
+  "count" : 2
+}, {
+  "id" : 50,
+  "timestamp" : "2013-07-15T17:49:58.899+0200",
+  "bytes" : 0,
+  "millis" : 0,
+  "count" : 0
+} ]
+{% endhighlight %}
+
+<p>Each bucket listed shows the first message id in the bucket, its timestamp, total bytes of messages in the bucket
+and the message count. The last bucket is an empty placeholder and always has an id equal to the id that the next
+message appended to the queue will be assigned. The number of buckets depends on the maxSize and maxPayloadSize of the
+queue and how full it is.</p>
+
+<p>Each bucket listed can be displayed in more detail by looking it up by id:</p>
+
+{% highlight bash %}
+$ curl http://127.0.0.1:9554/q/foo/timeline/0
+[ ... ]
+{% endhighlight %}
+
+<p>If the id requested is before the first bucket then the first bucket is listed.</p>
 
 <h2><a name="outputs"></a>Outputs</h2>
 
