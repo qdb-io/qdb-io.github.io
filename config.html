@@ -26,8 +26,8 @@ in the source code.</p>
 are passed to the "java" command that runs QDB. You might want to configure memory usage. Example /etc/default.qdb:</p>
 
 {% highlight bash %}
-# Start with 64m heap
-QDB_SERVER_OPTS="-server -Xmx64m -Xms64m -XX:+UseCompressedOops"
+# Start with 16m heap
+QDB_SERVER_OPTS="-server -Xmx16m -Xms16m -XX:+UseCompressedOops"
 {% endhighlight %}
 
 <h2><a name="logging"></a>Logging</h2>
@@ -38,10 +38,10 @@ supported. Sample /etc/qdb.properties:</p>
 
 {% highlight properties %}
 # Port is optional, default is 12201 (Graylog2 default)
-graylog2=graylog2.acme.com:12345
+graylog2 = graylog2.acme.com:12345
 # Default is 0.9.6
-graylog2ServerVersion=0.9.6
+graylog2ServerVersion = 0.9.6
 # Only INFO, WARN and ERROR messages are sent to Graylog2, DEBUG only to console
-logLevel=DEBUG
+logLevel = DEBUG
 # Default logLevel is INFO
 {% endhighlight %}

@@ -10,13 +10,13 @@ release: 0.2.0-SNAPSHOT
 
 <h2>Ubuntu & Debian</h2>
 
-<p>Install <a href="http://downloads.qdb.io/qdb-server_{{ page.release }}.deb">qdb-server_{{ page.release }}.deb</a>.
+<p>Install <a href="http://downloads.qdb.io/qdb-server-{{ page.release }}.deb">qdb-server_{{ page.release }}.deb</a>.
 This includes init scripts, creates a qdb user and so on.</p>
 
 {% highlight bash %}
-$ wget http://downloads.qdb.io/qdb-server_{{ page.release }}.deb
+$ wget http://downloads.qdb.io/qdb-server-{{ page.release }}.deb
 $ sudo apt-get install openjdk-7-jdk
-$ sudo dpkg -i qdb-server_{{ page.release }}.deb
+$ sudo dpkg -i qdb-server-{{ page.release }}.deb
 $ tail -f /var/log/qdb/qdb.log
 {% endhighlight %}
 
