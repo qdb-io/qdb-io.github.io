@@ -75,6 +75,8 @@ buffer/queue. Queues can have <a href="#outputs">outputs</a> which automatically
 $ curl -XPOST http://127.0.0.1:9554/q/incoming -d maxSize=200g -d maxPayloadSize=10m
 # the contentType of a queue is used when retrieving individual messages
 $ curl -XPOST http://127.0.0.1:9554/q/incoming -d contentType="application/json; charset=utf-8"
+# list queues
+$ curl http://127.0.0.1:9554/q
 {% endhighlight %}
 
 <h3><a name="appending"></a>Appending Messages</h3>
@@ -329,11 +331,14 @@ exchange).</p>
 <h2><a name="databases"></a>Databases</h2>
 
 <p>Queues in QDB are grouped into databases. There is a database called "default" that is assumed when
-no database is specified, which is why these two calls return information about the same queue (foo):</p>
+no database is specified:</p>
 
 {% highlight bash %}
+# these two calls return information about the same queue (foo)
 $ curl http://127.0.0.1:9554/q/foo
 $ curl http://127.0.0.1:9554/db/default/q/foo
+# list databases
+$ curl http://127.0.0.1:9554/db
 {% endhighlight %}
 
 <h2><a name="security"></a>Security & Users</h2>
@@ -350,9 +355,11 @@ $ curl -XPOST http://127.0.0.1:9554/users/david -d admin=true -d password=secret
 $ curl http://127.0.0.1:9554/users
 # get details of the "david" user
 $ curl http://127.0.0.1:9554/users/david
-# authenticate as "david" and list all database visible to "david"
+# authenticate as "david" and list all databases visible to "david"
 $ curl --user david:secret http://127.0.0.1:9554/db
 # change the password for the "admin" user
 $ curl -XPOST http://127.0.0.1:9554/users/admin -d password=oink
+# list users
+$ curl --user admin:oink http://127.0.0.1:9554/users
 {% endhighlight %}
 
