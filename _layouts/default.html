@@ -28,19 +28,14 @@
 <div class="navbar navbar-fixed-top">
     <div class="navbar-inner">
         <div class="container">
-            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </a>
-            <a class="brand" href="/">QDB</a>
-            <div class="nav-collapse collapse" id="main-menu">
+            <div id="main-menu">
                 <ul class="nav" id="main-menu-left">
-                    <li><a href="/api">REST API</a></li>
-                    <li><a href="/config">Configuration</a></li>
-                    <li><a href="/download">Download</a></li>
+                    <li {% if page.menu == '/' %}class="active"{% endif %}><a href="/">QDB</a></li>
+                    <li {% if page.menu == 'api' %}class="active"{% endif %}><a href="/api">REST API</a></li>
+                    <li {% if page.menu == 'config' %}class="active"{% endif %}><a href="/config">Configuration</a></li>
+                    <li {% if page.menu == 'download' %}class="active"{% endif %}><a href="/download">Download</a></li>
                     <li><a href="https://github.com/qdb-io/qdb-server">Github</a></li>
-                    <li><a href="/license">License</a></li>
+                    <li {% if page.menu == 'license' %}class="active"{% endif %}><a href="/license">License</a></li>
                 </ul>
             </div>
         </div>
