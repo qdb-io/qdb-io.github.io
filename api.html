@@ -156,7 +156,7 @@ bytes of the message payload. The Content-Type is the "contentType" parameter of
 
 {% highlight bash %}
 # the timestamp, routing key and id are returned via QDB-* headers
-$ curl -v "http://127.0.0.1:9554/q/incoming/messages?single=true&id=30"
+$ curl -v "http://127.0.0.1:9554/q/incoming/messages?single=true&fromId=30"
 ...
 < Content-Type: application/octet-stream
 < QDB-Timestamp: 2013-07-14T19:47:21.241+0200
@@ -326,7 +326,34 @@ $ curl http://127.0.0.1:9554/q/foo/timeline/0
 <p>Outputs are attached to queues and do something with incoming or existing messages (e.g. publish them to a RabbitMQ
 exchange).</p>
 
-<p>TODO</p>
+{% highlight bash %}
+# output messages to foobar RabbitMQ exchange
+$ curl -XPOST http://127.0.0.1:9554/q/foo/out/rabbit -d type=rabbitmq \
+    -d url=amqp://127.0.0.1 -d queues=foo,bar -d exchange=foobar
+# list outputs for queue foo
+$ curl http://127.0.0.1:9554/q/foo/out
+[ {
+  "id" : "rabbit",
+  "version" : 6,
+  "type" : "rabbitmq",
+  "url" : "amqp://127.0.0.1",
+  "enabled" : true,
+  "atId" : 85,
+  "at" : "2013-07-17T21:41:07.121+0200",
+  "queues" : [ "foo", "bar" ]
+} ]
+{% endhighlight %}
+
+<p>The exchange and queues are created if they do not exist and bound together. Likewise if the output already
+exists it is updated. More output types will be added in future releases.</p>
+
+<p>By default newly created outputs only output new messages. Use the from or fromId parameters to change
+this (at creation time or later):</p>
+
+{% highlight bash %}
+# output messages from 10h20 today
+$ curl -XPOST http://127.0.0.1:9554/q/foo/out -d from=10:20
+{% endhighlight %}
 
 <h2><a name="databases"></a>Databases</h2>
 
