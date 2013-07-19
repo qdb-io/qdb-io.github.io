@@ -353,7 +353,41 @@ this (at creation time or later):</p>
 {% highlight bash %}
 # output messages from 10h20 today
 $ curl -XPOST http://127.0.0.1:9554/q/foo/out -d from=10:20
+# turn the output off
+$ curl -XPOST http://127.0.0.1:9554/q/foo/out -d enabled=false
 {% endhighlight %}
+
+<h3>RabbitMQ</h3>
+
+<p>Use type=rabbitmq to output to RabbitMQ. The url and either an exchange and/or a queue are required. If only
+a queue is given then an exchange with the same name is created. The type and durability of the exchange and
+the durability of the queue(s) can be set:</p>
+
+{% highlight bash %}
+# default exchange type is fanout and is durable, this will create non-durable exchange
+$ curl -XPOST http://127.0.0.1:9554/q/foo/out -d exchange=foobar#fanout#false
+# queue foo is non-durable, bar is durable
+$ curl -XPOST http://127.0.0.1:9554/q/foo/out -d queues=foo#false,bar#true
+{% endhighlight %}
+
+<p>Other parameters (with defaults):</p>
+
+<div class="param-table">
+    <table class="table table-condensed">
+        <tbody>
+        <tr>
+            <td>url</td>
+            <td>(required)</td>
+            <td>amqp[s]://user:password@host:port[/vhost]</td>
+        </tr>
+        <tr>
+            <td>heartbeat</td>
+            <td>30</td>
+            <td>heartbeat in seconds, 0 to disable</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
 
 <h2><a name="databases"></a>Databases</h2>
 
