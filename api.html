@@ -152,9 +152,31 @@ $ curl -XPOST "http://127.0.0.1:9554/q/incoming/messages?multiple=true" -d @batc
 
 <h3><a name="queue_status"></a>Queue Status</h3>
 
+<p>This endpoint shows the current values of the configurable parameters of the queue as well as its current status:</p>
+
 {% highlight bash %}
 $ curl http://127.0.0.1:9554/q/incoming
+{
+  "id" : "incoming",
+  "version" : 4,
+  "maxSize" : "5 GB",
+  "maxPayloadSize" : "1 MB",
+  "contentType" : "application/json; charset=utf-8",
+  "size" : "11.58 MB",
+  "messageCount" : 4935,
+  "duration" : "0:16:38",
+  "oldestMessage" : "2013-07-21T16:33:09.086+0000",
+  "newestMessage" : "2013-07-21T16:49:47.247+0000",
+  "newestMessageReceived" : "398 ms ago",
+  "oldestMessageId" : 25783741609,
+  "nextMessageId" : 25795839988
+}
+# duration = time between newest and oldest messages
+# newestMessageReceived = how long ago was the most recent message appended?
 {% endhighlight %}
+
+<p>Examining the newestMessageReceived parameter is an easy way to check that whatever application is supposed to
+be appending to the queue is actually doing so.</p>
 
 <h3><a name="retrieving"></a>Retrieving Messages</h3>
 
