@@ -2,6 +2,7 @@
 layout: default
 title: REST API
 menu: api
+class: api
 ---
 
 <h1><a name="rest_api"></a>REST API</h1>
@@ -83,7 +84,8 @@ $ curl http://127.0.0.1:9554/q
 
 <p>Messages can be POSTed individually or in bulk. Each message may have an optional routing key string (max 255
 characters), is timestamped and assigned a unique id. The message itself can be any binary or text data. Message id's
-are not consecutive but newer messages always have bigger id's than older messages.</p>
+are not consecutive but newer messages always have bigger id's than older messages. The first message appended has
+id 1.</p>
 
 {% highlight bash %}
 # append a single message with payload from message.dat (the body of the POST)
@@ -147,6 +149,12 @@ $ curl -XPOST "http://127.0.0.1:9554/q/incoming/messages?multiple=true" -d @batc
 {% endhighlight %}
 
 <p>QDB can append 5000-6000 messages/sec, each 0-4k in size on a 2011 MBP using batches of 50.</p>
+
+<h3><a name="queue_status"></a>Queue Status</h3>
+
+{% highlight bash %}
+$ curl http://127.0.0.1:9554/q/incoming
+{% endhighlight %}
 
 <h3><a name="retrieving"></a>Retrieving Messages</h3>
 

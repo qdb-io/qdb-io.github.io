@@ -29,6 +29,19 @@
     padding-right: 12px;
 }
 
+.api h1 { counter-reset: h2; }
+.api h2 { counter-reset: h3; }
+
+.api h2:before {
+    counter-increment: h2;
+    content: counter(h2) ". ";
+}
+
+.api h3:before {
+    counter-increment: h3;
+    content: counter(h2) "." counter(h3) ". ";
+}
+
 @media (max-width: 768px) {
     .param-table {
         font-size: 12px;
