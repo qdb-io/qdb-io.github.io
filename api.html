@@ -155,27 +155,27 @@ $ curl -XPOST "http://127.0.0.1:9554/q/incoming/messages?multiple=true" -d @batc
 <p>This endpoint shows the current values of the configurable parameters of the queue as well as its current status:</p>
 
 {% highlight bash %}
-$ curl http://127.0.0.1:9554/q/incoming
+$ curl http://127.0.0.1:9554/q/mentions
 {
-  "id" : "incoming",
-  "version" : 4,
-  "maxSize" : "5 GB",
+  "id" : "mentions",
+  "version" : 2,
+  "maxSize" : "20 GB",
   "maxPayloadSize" : "1 MB",
   "contentType" : "application/json; charset=utf-8",
-  "size" : "11.58 MB",
-  "messageCount" : 4935,
-  "duration" : "0:16:38",
-  "oldestMessage" : "2013-07-21T16:33:09.086+0000",
-  "newestMessage" : "2013-07-21T16:49:47.247+0000",
-  "newestMessageReceived" : "398 ms ago",
-  "oldestMessageId" : 25783741609,
-  "nextMessageId" : 25795839988
+  "size" : "5.14 GB",
+  "messageCount" : 3392333,
+  "duration" : "10 days 11:11:03",
+  "oldestMessage" : "2013-07-11T07:42:20.274+0100",
+  "newestMessage" : "2013-07-21T18:53:24.136+0100",
+  "newestMessageReceived" : "0:00:02 ago",
+  "oldestMessageId" : 1,
+  "nextMessageId" : 5514576311
 }
 # duration = time between newest and oldest messages
 # newestMessageReceived = how long ago was the most recent message appended?
 {% endhighlight %}
 
-<p>Examining the newestMessageReceived parameter is an easy way to check that whatever application is supposed to
+<p>Examining the newestMessageReceived field is an easy way to check that whatever application is supposed to
 be appending to the queue is actually doing so.</p>
 
 <h3><a name="retrieving"></a>Retrieving Messages</h3>
@@ -387,9 +387,49 @@ $ curl -XPOST http://127.0.0.1:9554/q/foo/out -d from=10:20
 $ curl -XPOST http://127.0.0.1:9554/q/foo/out -d enabled=false
 {% endhighlight %}
 
-<h3>RabbitMQ</h3>
+<h3><a name="output_status"></a>Output Status</h3>
 
-<p>Use type=rabbitmq to output to RabbitMQ. The url and either an exchange and/or a queue are required. If only
+<p>This endpoint shows the current values of the configurable parameters of the output as well as its current
+status. You can query all outputs for a queue or individual outputs:</p>
+
+{% highlight bash %}
+$ curl http://127.0.0.1:9554/q/mentions/out
+[ {
+  "id" : "rabbit",
+  "version" : 316690,
+  "type" : "rabbitmq",
+  "url" : "amqps://user:password@example.com",
+  "enabled" : true,
+  "atId" : 5503589683,
+  "at" : "2013-07-21T18:39:05.728+0100",
+  "behindBy" : "23 ms",
+  "behindByBytes" : "1.2 kB",
+  "behindByPercentage" : 0.0,
+  "queues" : [ "pork-mentions", "goose-mentions" ],
+  "exchange" : "mentions"
+} ]
+$ curl http://127.0.0.1:9554/q/mentions/out/rabbit
+# .. same information just for the output with id "rabbit" ..
+{% endhighlight %}
+
+<p>The <em>behind*</em> fields show how well the output is keeping up as new messages are appended to the queue. In this case
+there are 23 milliseconds or 1.2 kB of messages in the queue that have not been sent to RabbitMQ. The
+<em>behindByPercentage</em> field is <em>behindByBytes</em> expressed as a percentage of the queue <em>maxSize</em>.
+If it reaches 100% some messages in the queue are going to be deleted before being processed by the output. You can increase
+the size of the queue at any time to avoid data loss:</p>
+
+{% highlight bash %}
+$ curl http://127.0.0.1:9554/q/mentions
+{
+  ...
+  "maxSize" : "20 GB",
+}
+$ curl -XPOST http://127.0.0.1:9554/q/mentions -d maxSize=40g
+{% endhighlight %}
+
+<h3><a name="rabbitmq"></a>RabbitMQ</h3>
+
+<p>Use <em>type=rabbitmq</em> to output to RabbitMQ. The url and either an exchange and/or a queue are required. If only
 a queue is given then an exchange with the same name is created. The type and durability of the exchange and
 the durability of the queue(s) can be set:</p>
 
