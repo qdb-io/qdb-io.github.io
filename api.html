@@ -181,8 +181,8 @@ be appending to the queue is actually doing so.</p>
 <h3><a name="retrieving"></a>Retrieving Messages</h3>
 
 <p>Old and incoming messages can be efficiently retrieved by id or timestamp, one at a time or streamed.
-Specify single=true to retrieve a single message as the body of the response. The Content-Length is the size in
-bytes of the message payload. The Content-Type is the "contentType" parameter of the queue:</p>
+Specify <em>single=true</em> to retrieve a single message as the body of the response. The <em>Content-Length</em> is the size in
+bytes of the message payload. The <em>Content-Type</em> is the <em>contentType</em> parameter of the queue:</p>
 
 {% highlight bash %}
 # the timestamp, routing key and id are returned via QDB-* headers
@@ -268,8 +268,8 @@ The payload is binary data
 <p>Each messages is prefixed with a single line JSON header preceded by its size in bytes in decimal ASCII digits
 (see <a href="http://en.wikipedia.org/wiki/Netstrings">netstrings</a>) and a colon, followed by a linefeed
 (\n, ASCII 10). The binary payload immediately follows the header and is followed by a linefeed. QDB will write extra
-linefeeds every 29 seconds if there are no new messages to keep the connection alive. The Content-Type of the response
-is application/octet-stream.</p>
+linefeeds every 29 seconds if there are no new messages to keep the connection alive. The <em>Content-Type</em> of the response
+is <em>application/octet-stream</em>.</p>
 
 <p>This endpoint supports a number of other optional parameters shown with the default values:</p>
 
