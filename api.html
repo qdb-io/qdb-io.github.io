@@ -162,6 +162,7 @@ $ curl http://127.0.0.1:9554/q/mentions
   "maxSize" : "20 GB",
   "maxPayloadSize" : "1 MB",
   "contentType" : "application/json; charset=utf-8",
+  "status" : "OK",
   "size" : "5.14 GB",
   "messageCount" : 3392333,
   "duration" : "10 days 11:11:03",
@@ -177,6 +178,33 @@ $ curl http://127.0.0.1:9554/q/mentions
 
 <p>Examining the newestMessageReceived field is an easy way to check that whatever application is supposed to
 be appending to the queue is actually doing so.</p>
+
+<h3><a name="queue_status_monitoring"></a>Queue Status Monitoring</h3>
+
+<p>QDB can monitor <em>newestMessageReceived</em> and log warnings and errors when it exceeds configurable
+thresholds, <em>warnAfter</em> and/or <em>errorAfter</em> respectively:</p>
+
+{% highlight bash %}
+# The current WARN or ERROR status is reflected in the queue status
+$ curl -XPOST http://127.0.0.1:9554/q/mentions -d warnAfter=60 -d errorAfter=5:00
+{
+"id" : "mentions",
+...
+"status" : "WARN: Last message appended 0:01:02 ago",
+...
+"newestMessageReceived" : "0:01:02 ago",
+}
+{% endhighlight %}
+
+<p>Changes in status are logged. The WARN and ERROR messages are repeated every 5 minutes (this is
+<a href="/config">configurable</a>):</p>
+
+{% highlight pypylog %}
+23:31:56.539 [queue-status-monitor] WARN  ... - /q/mentions: Last message appended 0:01:00 ago
+23:35:56.540 [queue-status-monitor] ERROR ... - /q/mentions: Last message appended 0:05:00 ago
+23:40:56.540 [queue-status-monitor] ERROR ... - /q/mentions: Last message appended 0:10:00 ago
+23:42:12.537 [queue-status-monitor] INFO  ... - /q/mentions has recovered
+{% endhighlight %}
 
 <h3><a name="retrieving"></a>Retrieving Messages</h3>
 
