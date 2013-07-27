@@ -179,7 +179,7 @@ $ curl http://127.0.0.1:9554/q/mentions
 <p>Examining the newestMessageReceived field is an easy way to check that whatever application is supposed to
 be appending to the queue is actually doing so.</p>
 
-<h3><a name="queue_status_monitoring"></a>Queue Status Monitoring</h3>
+<h3><a name="queue_alerts"></a>Queue Alerts</h3>
 
 <p>QDB can monitor <em>newestMessageReceived</em> and log warnings and errors when it exceeds configurable
 thresholds, <em>warnAfter</em> and/or <em>errorAfter</em> respectively:</p>
@@ -205,6 +205,8 @@ $ curl -XPOST http://127.0.0.1:9554/q/mentions -d warnAfter=60 -d errorAfter=5:0
 23:40:56.540 [queue-status-monitor] ERROR ... - /q/mentions: Last message appended 0:10:00 ago
 23:42:12.537 [queue-status-monitor] INFO  ... - /q/mentions has recovered
 {% endhighlight %}
+
+<p>The duration can include days e.g. "2d 10:20:30" is 2 days 10 hours 20 minutes and 30 seconds.</p>
 
 <h3><a name="retrieving"></a>Retrieving Messages</h3>
 
@@ -430,6 +432,7 @@ $ curl http://127.0.0.1:9554/q/mentions/out
   "enabled" : true,
   "atId" : 5503589683,
   "at" : "2013-07-21T18:39:05.728+0100",
+  "status": "OK",
   "behindBy" : "23 ms",
   "behindByBytes" : "1.2 kB",
   "behindByPercentage" : 0.0,
@@ -453,6 +456,36 @@ $ curl http://127.0.0.1:9554/q/mentions
   "maxSize" : "20 GB",
 }
 $ curl -XPOST http://127.0.0.1:9554/q/mentions -d maxSize=40g
+{% endhighlight %}
+
+<h3><a name="output_alerts"></a>Output Alerts</h3>
+
+<p>QDB can monitor <em>behindByPercentage</em> and log warnings and errors when it exceeds configurable thresholds,
+warnAfter and/or errorAfter respectively:</p>
+
+{% highlight bash %}
+# The current WARN or ERROR status is reflected in the output status
+$ curl -XPOST http://127.0.0.1:9554/q/mentions/out/rabbit -d warnAfter=10 -d errorAfter=20
+{
+  "id" : "rabbit",
+  ...
+  "status" : "WARN: 19.8% of queue used",
+  ...
+  "behindByPercentage" : 19.8,
+  "warnAfter" : 10.0,
+  "errorAfter" : 20.0,
+  ...
+}
+{% endhighlight %}
+
+<p>Changes in status are logged. The WARN and ERROR messages are repeated every 5 minutes (this is
+<a href="/config">configurable</a>):</p>
+
+{% highlight pypylog %}
+23:31:56.539 [output-status-monitor] WARN  ... - /q/mentions/out/rabbit: 19.8% of queue used
+23:35:56.540 [output-status-monitor] ERROR ... - /q/mentions/out/rabbit: 22.5% of queue used
+23:40:56.540 [output-status-monitor] ERROR ... - /q/mentions/out/rabbit: 26.3% of queue used
+23:42:12.537 [output-status-monitor] INFO  ... - /q/mentions/out/rabbit has recovered
 {% endhighlight %}
 
 <h3><a name="rabbitmq"></a>RabbitMQ</h3>
