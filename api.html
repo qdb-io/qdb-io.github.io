@@ -5,12 +5,13 @@ menu: api
 class: api
 ---
 
-<h1><a name="rest_api"></a>REST API</h1>
+<div class="left-col">
+    <h1><a name="rest_api"></a>REST API</h1>
 
-<p>The QDB API follows RESTful principles and you don't need any driver libraries to communicate with it. HTTP POST
-does create or update, PUT does update only, DELETE deletes stuff and GET retrieves resources. All endpoints accept
-JSON data and/or URL-encoded form data and most return JSON. The examples in this documentation use
-<a href="http://curl.haxx.se/">curl</a>, a utility for making HTTP requests from the command line.</p>
+    <p>The QDB API follows RESTful principles and you don't need any driver libraries to communicate with it. HTTP POST
+        does create or update, PUT does update only, DELETE deletes stuff and GET retrieves resources. All endpoints accept
+        JSON data and/or URL-encoded form data and most return JSON. The examples in this documentation use
+        <a href="http://curl.haxx.se/">curl</a>, a utility for making HTTP requests from the command line.</p>
 
 {% highlight bash %}
 # create or update a queue "foo" with max size of 100 gb
@@ -19,8 +20,39 @@ $ curl -XPOST http://127.0.0.1:9554/q/foo -d maxSize=100g
 $ curl -XPOST -H "Content-Type: application/json" http://127.0.0.1:9554/q/foo -d @foo.json
 {% endhighlight %}
 
+    <p>The usual <a href="http://en.wikipedia.org/wiki/List_of_HTTP_status_codes">HTTP status codes</a> are used.
+        POST requests that actually create something return 201 (created), those that just do an update return 200 (ok).
+        POST and PUT requests both only update fields supplied in the request and leave others as is. A full JSON
+        representation of the object is returned. Well-formed requests with validation errors return 422 (unprocessable
+        entity). If a version number is supplied with a request and the version of the object currently on the server is
+        different then a 409 (conflict) is returned.</p>
+</div>
+
+<div class="right-col">
+    <ul class="toc">
+        <a href="#rest_api">REST API</a>
+        <li><a href="#server">Server Status</a></li>
+        <li><a href="#queues">Queues</a></li>
+        <li><ul>
+            <li><a href="#appending">Appending Messages</a></li>
+            <li><a href="#queue_status">Queue Status</a></li>
+            <li><a href="#queue_alerts">Queue Alerts</a></li>
+            <li><a href="#retrieving">Retrieving Messages</a></li>
+            <li><a href="#timelines">Timelines</a></li>
+        </ul></li>
+        <li><a href="#outputs">Outputs</a></li>
+        <li><ul>
+            <li><a href="#output_status">Output Status</a></li>
+            <li><a href="#output_alerts">Output Alerts</a></li>
+            <li><a href="#rabbitmq">RabbitMQ</a></li>
+        </ul></li>
+        <li><a href="#databases">Databases</a></li>
+        <li><a href="#security">Security & Users</a></li>
+    </ul>
+</div>
+
 <p>QDB returns sizes as human readable strings using binary suffixes (1 MB = 1048576 bytes) and dates as ISO8601
-with timezone. You can get number byte values and dates as milliseconds since 1970 by turning on borg mode:</p>
+    with timezone. You can get number byte values and dates as milliseconds since 1970 by turning on borg mode:</p>
 
 {% highlight bash %}
 $ curl http://127.0.0.1:9554/q/foo
@@ -39,15 +71,9 @@ $ curl http://127.0.0.1:9554/q/foo?borg=true
 }
 {% endhighlight %}
 
-<p>The usual <a href="http://en.wikipedia.org/wiki/List_of_HTTP_status_codes">HTTP status codes</a> are used.
-    POST requests that actually create something return 201 (created), those that just do an update return 200 (ok).
-    POST and PUT requests both only update fields supplied in the request and leave others as is. A full JSON
-    representation of the object is returned. Well-formed requests with validation errors return 422 (unprocessable
-    entity). If a version number is supplied with a request and the version of the object currently on the server is
-    different then a 409 (conflict) is returned.</p>
-
 <p>QDB supports HTTP keep-alive so repeated calls to the server can be done using the same connection.</p>
 
+<div class="h2-reset"></div>
 <h2><a name="server"></a>Server Status</h2>
 
 {% highlight bash %}

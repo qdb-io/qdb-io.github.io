@@ -29,7 +29,7 @@
     padding-right: 12px;
 }
 
-.api h1 { counter-reset: h2; }
+.api .h2-reset { counter-reset: h2; }
 .api h2 { counter-reset: h3; }
 
 .api h2:before {
@@ -40,6 +40,52 @@
 .api h3:before {
     counter-increment: h3;
     content: counter(h2) "." counter(h3) ". ";
+}
+
+.api .left-col {
+    display: table-cell;
+}
+
+.api .right-col {
+    display: table-cell;
+    width: 236px;
+}
+
+.toc {
+    counter-reset: toc1;
+    -webkit-box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.1);
+    -moz-box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    background: #333;
+    padding: 12px;
+}
+
+.toc a {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.toc ul { counter-reset: toc2; }
+
+.toc li { display: block; }
+
+.toc > li a:before {
+    counter-increment: toc1;
+    content: counter(toc1) ". ";
+}
+
+.toc ul li a:before {
+    counter-increment: toc2;
+    content: counter(toc1) "." counter(toc2) ". ";
+}
+
+.toc ul li {
+    font-size: 14px;
+    line-height: 23px;
 }
 
 @media (max-width: 768px) {
@@ -57,5 +103,38 @@
 
     .param-table td:last-child {
         padding-right: 5px;
+    }
+
+    .toc {
+        margin-left: 10px;
+    }
+
+    .toc li {
+        font-size: 14px;
+        line-height: 22px;
+    }
+
+    .toc ul {
+        margin-left: 15px;
+    }
+
+    .toc ul li {
+        font-size: 12px;
+        line-height: 21px;
+    }
+}
+
+@media (max-width: 600px) {
+    .api .left-col {
+        display: block;
+    }
+
+    .toc {
+        margin-left: 0;
+    }
+
+    .api .right-col {
+        display: block;
+        width: 100%;
     }
 }
