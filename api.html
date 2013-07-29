@@ -20,12 +20,6 @@ $ curl -XPOST http://127.0.0.1:9554/q/foo -d maxSize=100g
 $ curl -XPOST -H "Content-Type: application/json" http://127.0.0.1:9554/q/foo -d @foo.json
 {% endhighlight %}
 
-    <p>The usual <a href="http://en.wikipedia.org/wiki/List_of_HTTP_status_codes">HTTP status codes</a> are used.
-        POST requests that actually create something return 201 (created), those that just do an update return 200 (ok).
-        POST and PUT requests both only update fields supplied in the request and leave others as is. A full JSON
-        representation of the object is returned. Well-formed requests with validation errors return 422 (unprocessable
-        entity). If a version number is supplied with a request and the version of the object currently on the server is
-        different then a 409 (conflict) is returned.</p>
 </div>
 
 <div class="right-col">
@@ -50,6 +44,13 @@ $ curl -XPOST -H "Content-Type: application/json" http://127.0.0.1:9554/q/foo -d
         <li><a href="#security">Security & Users</a></li>
     </ul>
 </div>
+
+<p>The usual <a href="http://en.wikipedia.org/wiki/List_of_HTTP_status_codes">HTTP status codes</a> are used.
+    POST requests that actually create something return 201 (created), those that just do an update return 200 (ok).
+    POST and PUT requests both only update fields supplied in the request and leave others as is. A full JSON
+    representation of the object is returned. Well-formed requests with validation errors return 422 (unprocessable
+    entity). If a version number is supplied with a request and the version of the object currently on the server is
+    different then a 409 (conflict) is returned.</p>
 
 <p>QDB returns sizes as human readable strings using binary suffixes (1 MB = 1048576 bytes) and dates as ISO8601
     with timezone. You can get number byte values and dates as milliseconds since 1970 by turning on borg mode:</p>
