@@ -6,6 +6,29 @@
     margin-bottom: 0;
 }
 
+
+.follow-qdbio {
+    border: none;
+    display: block;
+    float: left;
+    margin-right: 20px;
+    margin-top: 2px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.follow-qdbio img {
+    width: 100px;
+    height: 100px;
+}
+
+span.bullet {
+    color: #98fb98;
+    display: inline-block;
+    font-size: 120%;
+    margin-right: 3px;
+}
+
 .param-table {
     font-family: Menlo,Monaco,Consolas,"Courier New",monospace;
     font-size: 14px;
@@ -98,6 +121,16 @@
 }
 
 @media (max-width: 768px) {
+    .follow-qdbio {
+        margin-right: 10px;
+        margin-bottom: 10px;
+    }
+
+    .follow-qdbio img {
+        width: 75px;
+        height: 75px;
+    }
+
     .param-table {
         font-size: 12px;
         margin: 0 0 10px;
