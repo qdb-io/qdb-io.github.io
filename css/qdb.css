@@ -1,3 +1,11 @@
+.main-container {
+    padding-top: 0;
+}
+
+.navbar {
+    margin-bottom: 0;
+}
+
 .param-table {
     font-family: Menlo,Monaco,Consolas,"Courier New",monospace;
     font-size: 14px;
