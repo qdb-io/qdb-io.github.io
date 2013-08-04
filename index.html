@@ -17,7 +17,21 @@ menu: /
     <span class="bullet">&raquo;</span> Use on its own or as a front end to <a href="http://www.rabbitmq.com/">RabbitMQ</a><br>
 </p>
 
-<p style="clear: both">The following example creates a queue and configures it to output to RabbitMQ:</p>
+<div class="diag">
+    <h2>Backup/Replay RabbitMQ Queue</h2>
+
+    <img src="/img/rabbitmq_backup.png" width="267" height="114"/>
+</div>
+
+<div class="diag">
+    <h2>Push To Remote RabbitMQ Server</h2>
+
+    <img src="/img/push_to_rabbitmq.png" width="378" height="113"/>
+</div>
+
+<div style="clear: both"></div>
+
+<p>The following example creates a queue and configures it to output to RabbitMQ:</p>
 
 {% highlight bash %}
 $ curl -XPOST http://127.0.0.1:9554/q/incoming

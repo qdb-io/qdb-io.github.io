@@ -29,6 +29,12 @@ span.bullet {
     margin-right: 3px;
 }
 
+.diag {
+    float: left;
+    margin-right: 60px;
+    margin-bottom: 20px;
+}
+
 .param-table {
     font-family: Menlo,Monaco,Consolas,"Courier New",monospace;
     font-size: 14px;
