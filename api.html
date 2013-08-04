@@ -20,6 +20,12 @@ $ curl -XPOST http://127.0.0.1:9554/q/foo -d maxSize=100g
 $ curl -XPOST -H "Content-Type: application/json" http://127.0.0.1:9554/q/foo -d @foo.json
 {% endhighlight %}
 
+    <p>The usual <a href="http://en.wikipedia.org/wiki/List_of_HTTP_status_codes">HTTP status codes</a> are used.
+        POST requests that actually create something return 201 (created), those that just do an update return 200 (ok).
+        POST and PUT requests both only update fields supplied in the request and leave others as is. A full JSON
+        representation of the object is returned. Well-formed requests with validation errors return 422 (unprocessable
+        entity). If a version number is supplied with a request and the version of the object currently on the server is
+        different then a 409 (conflict) is returned.</p>
 </div>
 
 <div class="right-col">
@@ -38,19 +44,18 @@ $ curl -XPOST -H "Content-Type: application/json" http://127.0.0.1:9554/q/foo -d
         <li><ul>
             <li><a href="#output_status">Output Status</a></li>
             <li><a href="#output_alerts">Output Alerts</a></li>
-            <li><a href="#rabbitmq">RabbitMQ</a></li>
+            <li><a href="#output_rabbitmq">RabbitMQ</a></li>
+        </ul></li>
+        <li><a href="#inputs">Inputs</a></li>
+        <li><ul>
+            <li><a href="#input_status">Input Status</a></li>
+            <li><a href="#input_alerts">Input Alerts</a></li>
+            <li><a href="#input_rabbitmq">RabbitMQ</a></li>
         </ul></li>
         <li><a href="#databases">Databases</a></li>
         <li><a href="#security">Security & Users</a></li>
     </ul>
 </div>
-
-<p>The usual <a href="http://en.wikipedia.org/wiki/List_of_HTTP_status_codes">HTTP status codes</a> are used.
-    POST requests that actually create something return 201 (created), those that just do an update return 200 (ok).
-    POST and PUT requests both only update fields supplied in the request and leave others as is. A full JSON
-    representation of the object is returned. Well-formed requests with validation errors return 422 (unprocessable
-    entity). If a version number is supplied with a request and the version of the object currently on the server is
-    different then a 409 (conflict) is returned.</p>
 
 <p>QDB returns sizes as human readable strings using binary suffixes (1 MB = 1048576 bytes) and dates as ISO8601
     with timezone. You can get number byte values and dates as milliseconds since 1970 by turning on borg mode:</p>
@@ -417,18 +422,6 @@ exchange).</p>
 # output messages to foobar RabbitMQ exchange
 $ curl -XPOST http://127.0.0.1:9554/q/foo/out/rabbit -d type=rabbitmq \
     -d url=amqp://127.0.0.1 -d queues=foo,bar -d exchange=foobar
-# list outputs for queue foo
-$ curl http://127.0.0.1:9554/q/foo/out
-[ {
-  "id" : "rabbit",
-  "version" : 6,
-  "type" : "rabbitmq",
-  "url" : "amqp://127.0.0.1",
-  "enabled" : true,
-  "atId" : 85,
-  "at" : "2013-07-17T21:41:07.121+0200",
-  "queues" : [ "foo", "bar" ]
-} ]
 {% endhighlight %}
 
 <p>The exchange and queues are created if they do not exist and bound together. Likewise if the output already
@@ -515,7 +508,7 @@ $ curl -XPOST http://127.0.0.1:9554/q/mentions/out/rabbit -d warnAfter=10 -d err
 23:42:12.537 [output-status-monitor] INFO  ... - /q/mentions/out/rabbit has recovered
 {% endhighlight %}
 
-<h3><a name="rabbitmq"></a>RabbitMQ</h3>
+<h3><a name="output_rabbitmq"></a>RabbitMQ</h3>
 
 <p>Use <em>type=rabbitmq</em> to output to RabbitMQ. The url and either an exchange and/or a queue are required. If only
 a queue is given then an exchange with the same name is created. The type and durability of the exchange and
@@ -523,9 +516,9 @@ the durability of the queue(s) can be set:</p>
 
 {% highlight bash %}
 # default exchange type is fanout and is durable, this will create non-durable exchange
-$ curl -XPOST http://127.0.0.1:9554/q/foo/out -d exchange=foobar#fanout#false
+$ curl -XPOST http://127.0.0.1:9554/q/foo/out/rabbit -d exchange=foobar#fanout#false
 # queue foo is non-durable, bar is durable
-$ curl -XPOST http://127.0.0.1:9554/q/foo/out -d queues=foo#false,bar#true
+$ curl -XPOST http://127.0.0.1:9554/q/foo/out/rabbit -d queues=foo#false,bar#true
 {% endhighlight %}
 
 <p>Other parameters (with defaults):</p>
@@ -542,6 +535,120 @@ $ curl -XPOST http://127.0.0.1:9554/q/foo/out -d queues=foo#false,bar#true
             <td>heartbeat</td>
             <td>30</td>
             <td>heartbeat in seconds, 0 to disable</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<h2><a name="inputs"></a>Inputs</h2>
+
+<p>Inputs are attached to queues to fetch and append messages from somewhere else (e.g. a RabbitMQ queue). It
+is very easy to setup an input to backup data arriving on a RabbitMQ queue to be played back when needed
+(using an output, be careful not to create a loop!).</p>
+
+{% highlight bash %}
+# create a qdb queue 'backup'
+$ curl -XPOST http://127.0.0.1:9554/q/backup
+# fetch messages from RabbitMQ queue 'backup' bound to exchange 'incoming'
+$ curl -XPOST http://127.0.0.1:9554/q/backup/in/rabbit -d type=rabbitmq \
+    -d url=amqp://127.0.0.1 -d queue=backup -d exchange=incoming
+{% endhighlight %}
+
+<p>The queue and (optional) exchange are created if they do not exist and bound together. Likewise if the input
+already exists it is updated. More input types will be added in future releases.</p>
+
+<h3><a name="input_status"></a>Input Status</h3>
+
+<p>This endpoint shows the current values of the configurable parameters of the input as well as its current
+status. You can query all inputs for a queue or individual inputs:</p>
+
+{% highlight bash %}
+$ curl http://127.0.0.1:9554/q/backup/in
+[ {
+  "id" : "rabbit",
+  "version" : 1298,
+  "type" : "rabbitmq",
+  "url" : "amqp://127.0.0.1",
+  "enabled" : true,
+  "updateIntervalMs" : 1000,
+  "errorAfter" : "0:01:00",
+  "status" : "OK",
+  "lastMessageId" : 28122142,
+  "lastMessageTimestamp" : "2013-08-04T09:55:10.214+0000",
+  "lastMessageAppended" : "0:00:01 ago",
+  "queue" : "backup",
+  "exchange" : "incoming"
+} ]
+$ curl http://127.0.0.1:9554/q/backup/in/rabbit
+# .. same information just for the input with id "rabbit" ..
+{% endhighlight %}
+
+<p>The <em>lastMessageAppended</em> field shows how long ago the last message was fetched and appended to the QDB
+queue. In this case it has been 1 second since the last messaged from RabbitMQ was appended.</p>
+
+<h3><a name="input_alerts"></a>Input Alerts</h3>
+
+<p>QDB can monitor <em>lastMessageAppended</em> and log warnings and errors when it exceeds configurable thresholds,
+warnAfter and/or errorAfter respectively:</p>
+
+{% highlight bash %}
+# The current WARN or ERROR status is reflected in the input status
+$ curl -XPOST http://127.0.0.1:9554/q/backup/in/rabbit -d warnAfter=10 -d errorAfter=20
+{
+  "id" : "rabbit",
+  ...
+  "status" : "WARN: Last message appended 0:2:32 ago",
+  ...
+}
+{% endhighlight %}
+
+<p>Changes in status are logged. The WARN and ERROR messages are repeated every 5 minutes (this is
+<a href="/config">configurable</a>):</p>
+
+{% highlight pypylog %}
+23:31:56.539 [input-status-monitor] WARN  ... - /q/backup/in/rabbit: Last message appended 0:00:10 ago
+23:35:56.540 [input-status-monitor] ERROR ... - /q/backup/in/rabbit: Last message appended 0:00:20 ago
+23:40:56.540 [input-status-monitor] ERROR ... - /q/backup/in/rabbit: Last message appended 0:05:20 ago
+23:42:12.537 [input-status-monitor] INFO  ... - /q/backup/in/rabbit has recovered
+{% endhighlight %}
+
+<h3><a name="input_rabbitmq"></a>RabbitMQ</h3>
+
+<p>Use <em>type=rabbitmq</em> to fetch messages from RabbitMQ. The url and a queue are required. If an
+exchange is also provided then an exchange is created and bound to the queue. The type and durability of the
+exchange and the durability of the queue(s) can be set:</p>
+
+{% highlight bash %}
+# default exchange type is fanout and is durable, this will create non-durable exchange
+$ curl -XPOST http://127.0.0.1:9554/q/backup/in/rabbit -d exchange=incoming#fanout#false
+# queue foo is non-durable, bar is durable
+$ curl -XPOST http://127.0.0.1:9554/q/backup/in/rabbit -d queue=backup#false
+{% endhighlight %}
+
+<p>Other parameters (with defaults):</p>
+
+<div class="param-table">
+    <table class="table table-condensed">
+        <tbody>
+        <tr>
+            <td>url</td>
+            <td>(required)</td>
+            <td>amqp[s]://user:password@host:port[/vhost]</td>
+        </tr>
+        <tr>
+            <td>heartbeat</td>
+            <td>30</td>
+            <td>heartbeat in seconds, 0 to disable</td>
+        </tr>
+        <tr>
+            <td>routingKey</td>
+            <td></td>
+            <td>routingKey used to bind the queue to the exchange</td>
+        </tr>
+        <tr>
+            <td>autoAck</td>
+            <td>false</td>
+            <td>if true messages are not individually acked</td>
         </tr>
         </tbody>
     </table>
