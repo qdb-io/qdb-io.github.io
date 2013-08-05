@@ -22,16 +22,31 @@
     height: 100px;
 }
 
-span.bullet {
+ul.bullets {
+    list-style: none;
+    margin-left: 0;
+}
+
+ul.bullets li:before {
     color: #98fb98;
     display: inline-block;
     font-size: 120%;
-    margin-right: 3px;
+    margin-right: 5px;
+    content: '\00BB';
 }
 
 .diag {
     float: left;
+    margin-bottom: 20px;
+}
+
+.diag-left {
     margin-right: 60px;
+    max-width: 378px;
+}
+
+.diag > img {
+    display: block;
     margin-bottom: 20px;
 }
 
