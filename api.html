@@ -54,6 +54,9 @@ $ curl -XPOST -H "Content-Type: application/json" http://127.0.0.1:9554/q/foo -d
         </ul></li>
         <li><a href="#databases">Databases</a></li>
         <li><a href="#security">Security & Users</a></li>
+        <li><a href="#appendix">Appendix</a></li><ul>
+            <li><a href="#date_time_formats">Date &amp; Time Formats</a></li>
+        </ul></li>
     </ul>
 </div>
 
@@ -260,61 +263,12 @@ Hello world!
 # Fetch the first message received on or after 19h47 today
 $ curl "http://127.0.0.1:9554/q/incoming/messages?single=true&from=19:47"
 Hello world!
+# Fetch the first message received on or after 15 Jul 2013 17h26:42.491 GMT+2
+$ curl "http://127.0.0.1:9554/q/incoming/messages?single=true&from=2013-07-15T17:26:42.491+0200"
+Hello world!
 {% endhighlight %}
 
-<p>A number of different date/time formats are supported:</p>
-
-<div class="param-table">
-    <table class="table table-condensed">
-        <tbody>
-        <tr>
-            <td>yyyy-MM-dd'T'HH:mm:ss.SSSZ</td>
-            <td>2013-07-15T17:26:42.491+0200</td>
-            <td>Full date, time and milliseconds with timezone</td>
-        </tr>
-        <tr>
-            <td>yyyy-MM-dd'T'HH:mm:ss.SSS</td>
-            <td>2013-07-15T17:26:42.491</td>
-            <td>Timezone is that of the server</td>
-        </tr>
-        <tr>
-            <td>yyyy-MM-dd'T'HH:mm:ssZ</td>
-            <td>2013-07-15T17:26:42+0200</td>
-            <td>Full date and time with timezone</td>
-        </tr>
-        <tr>
-            <td>yyyy-MM-dd'T'HH:mm:ss</td>
-            <td>2013-07-15T17:26:42</td>
-            <td>Timezone is that of the server</td>
-        </tr>
-        <tr>
-            <td>yyyy-MM-dd'T'HH:mm</td>
-            <td>2013-07-15T17:26</td>
-            <td>No secs, timezone is that of the server</td>
-        </tr>
-        <tr>
-            <td>yyyy-MM-dd</td>
-            <td>2013-07-15</td>
-            <td>Date only, timezone is that of the server</td>
-        </tr>
-        <tr>
-            <td>HH:mm:ss</td>
-            <td>17:26:42</td>
-            <td>That time today in servers timezone</td>
-        </tr>
-        <tr>
-            <td>HH:mm</td>
-            <td>17:26</td>
-            <td>That time today in servers timezone</td>
-        </tr>
-        <tr>
-            <td>[0-9]+</td>
-            <td>1373824041241</td>
-            <td>Milliseconds since 1970</td>
-        </tr>
-        </tbody>
-    </table>
-</div>
+<p>A number of different <a href="#date_time_formats">date/time formats</a> are supported.</p>
 
 <p>Multiple Messages can be streamed as they come in or from a past id or timestamp:</p>
 
@@ -448,6 +402,14 @@ this (at creation time or later):</p>
 $ curl -XPOST http://127.0.0.1:9554/q/foo/out -d from=10:20
 # turn the output off
 $ curl -XPOST http://127.0.0.1:9554/q/foo/out -d enabled=false
+{% endhighlight %}
+
+<p>Use the <em>to</em> or <em>toId</em> parameters to have the output stop automatically on reaching the specified
+timestamp or id respectively:</p>
+
+{% highlight bash %}
+# output messages from 10h20 to 10h30 (exclusive) today
+$ curl -XPOST http://127.0.0.1:9554/q/foo/out -d from=10:20 -d to=10:30
 {% endhighlight %}
 
 <h3><a name="output_status"></a>Output Status</h3>
@@ -702,3 +664,60 @@ $ curl -XPOST http://127.0.0.1:9554/users/admin -d password=oink
 $ curl --user admin:oink http://127.0.0.1:9554/users
 {% endhighlight %}
 
+<h2><a name="appendix"></a>Appendix</h2>
+
+<h3><a name="date_time_formats"></a>Date &amp; Time Formats</h3>
+
+<p>Time based parameters (e.g. <em>from</em> and <em>to</em>) can be specified in a number of formats:</p>
+
+<div class="param-table">
+    <table class="table table-condensed">
+        <tbody>
+        <tr>
+            <td>yyyy-MM-dd'T'HH:mm:ss.SSSZ</td>
+            <td>2013-07-15T17:26:42.491+0200</td>
+            <td>Full date, time and milliseconds with timezone</td>
+        </tr>
+        <tr>
+            <td>yyyy-MM-dd'T'HH:mm:ss.SSS</td>
+            <td>2013-07-15T17:26:42.491</td>
+            <td>Timezone is that of the server</td>
+        </tr>
+        <tr>
+            <td>yyyy-MM-dd'T'HH:mm:ssZ</td>
+            <td>2013-07-15T17:26:42+0200</td>
+            <td>Full date and time with timezone</td>
+        </tr>
+        <tr>
+            <td>yyyy-MM-dd'T'HH:mm:ss</td>
+            <td>2013-07-15T17:26:42</td>
+            <td>Timezone is that of the server</td>
+        </tr>
+        <tr>
+            <td>yyyy-MM-dd'T'HH:mm</td>
+            <td>2013-07-15T17:26</td>
+            <td>No secs, timezone is that of the server</td>
+        </tr>
+        <tr>
+            <td>yyyy-MM-dd</td>
+            <td>2013-07-15</td>
+            <td>Date only, timezone is that of the server</td>
+        </tr>
+        <tr>
+            <td>HH:mm:ss</td>
+            <td>17:26:42</td>
+            <td>That time today in servers timezone</td>
+        </tr>
+        <tr>
+            <td>HH:mm</td>
+            <td>17:26</td>
+            <td>That time today in servers timezone</td>
+        </tr>
+        <tr>
+            <td>[0-9]+</td>
+            <td>1373824041241</td>
+            <td>Milliseconds since 1970</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
