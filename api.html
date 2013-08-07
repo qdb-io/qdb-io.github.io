@@ -333,6 +333,14 @@ The payload is binary data
 linefeeds every 29 seconds if there are no new messages to keep the connection alive. The <em>Content-Type</em> of the response
 is <em>application/octet-stream</em>.</p>
 
+<p>Use the <em>to</em> (timestamp) or <em>toId</em> parameter to fetch messages until a particular time or id. These
+parameters are exclusive i.e. if there is a message with exactly the <em>to/toId</em> it is not returned.</p>
+
+{% highlight bash %}
+# Fetch messages received between 19:47 and 20:00 (exclusive) today
+$ curl "http://127.0.0.1:9554/q/incoming/messages?from=19:47&to=20:00"
+{% endhighlight %}
+
 <p>This endpoint supports a number of other optional parameters shown with the default values:</p>
 
 <div class="param-table">
@@ -347,6 +355,11 @@ is <em>application/octet-stream</em>.</p>
             <td>noHeaders</td>
             <td>false</td>
             <td>Don't send the header JSON</td>
+        </tr>
+        <tr>
+            <td>noPayload</td>
+            <td>false</td>
+            <td>Don't send the message payloads</td>
         </tr>
         <tr>
             <td>noLengthPrefix</td>
