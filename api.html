@@ -412,6 +412,15 @@ timestamp or id respectively:</p>
 $ curl -XPOST http://127.0.0.1:9554/q/foo/out -d from=10:20 -d to=10:30
 {% endhighlight %}
 
+<p>Use the <em>limit</em> parameter to have the output stop (disable itself) after outputting that many messages:</p>
+
+{% highlight bash %}
+# output 1000 messages from 10h20 today then stop
+$ curl -XPOST http://127.0.0.1:9554/q/foo/out -d from=10:20 -d limit=1000
+# output another 1000 messages from the current position
+$ curl -XPOST http://127.0.0.1:9554/q/foo/out -d limit=1000 -d enabled=true
+{% endhighlight %}
+
 <h3><a name="output_status"></a>Output Status</h3>
 
 <p>This endpoint shows the current values of the configurable parameters of the output as well as its current
