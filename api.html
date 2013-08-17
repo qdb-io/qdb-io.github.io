@@ -15,9 +15,9 @@ class: api
 
 {% highlight bash %}
 # create or update a queue "foo" with max size of 100 gb
-$ curl -XPOST http://127.0.0.1:9554/q/foo -d maxSize=100g
+$ curl http://127.0.0.1:9554/q/foo -d maxSize=100g
 # do the same but using a JSON document foo.json: { "maxSize": "100g" }
-$ curl -XPOST -H "Content-Type: application/json" http://127.0.0.1:9554/q/foo -d @foo.json
+$ curl -H "Content-Type: application/json" http://127.0.0.1:9554/q/foo -d @foo.json
 {% endhighlight %}
 
     <p>The usual <a href="http://en.wikipedia.org/wiki/List_of_HTTP_status_codes">HTTP status codes</a> are used.
@@ -108,9 +108,9 @@ buffer/queue. Queues can have <a href="#outputs">outputs</a> which automatically
 
 {% highlight bash %}
 # create queue "incoming" with capacity of 200 gb and max message size of 10 mb
-$ curl -XPOST http://127.0.0.1:9554/q/incoming -d maxSize=200g -d maxPayloadSize=10m
+$ curl http://127.0.0.1:9554/q/incoming -d maxSize=200g -d maxPayloadSize=10m
 # the contentType of a queue is used when retrieving individual messages
-$ curl -XPOST http://127.0.0.1:9554/q/incoming -d contentType="application/json; charset=utf-8"
+$ curl http://127.0.0.1:9554/q/incoming -d contentType="application/json; charset=utf-8"
 # list queues
 $ curl http://127.0.0.1:9554/q
 {% endhighlight %}
@@ -124,7 +124,7 @@ id 1.</p>
 
 {% highlight bash %}
 # append a single message with payload from message.dat (the body of the POST)
-$ curl -XPOST http://127.0.0.1:9554/q/incoming/messages?routingKey=abc:def -d @message.dat
+$ curl http://127.0.0.1:9554/q/incoming/messages?routingKey=abc:def -d @message.dat
 {
   "id" : 44,
   "timestamp" : "2013-07-07T23:13:29.277+0200",
@@ -152,7 +152,7 @@ followed by a colon and the actual byte data and a linefeed. Extra linefeeds are
 <p>QDB returns an array of JSON objects, one for each message appended:</p>
 
 {% highlight bash %}
-$ curl -XPOST http://127.0.0.1:9554/q/incoming/messages?multiple=true -d @batch.txt
+$ curl http://127.0.0.1:9554/q/incoming/messages?multiple=true -d @batch.txt
 [ {
   "id" : 30,
   "timestamp" : "2013-07-14T19:47:21.241+0200",
@@ -170,7 +170,7 @@ $ curl -XPOST http://127.0.0.1:9554/q/incoming/messages?multiple=true -d @batch.
 response identifies the successfully appended messages:</p>
 
 {% highlight bash %}
-$ curl -XPOST "http://127.0.0.1:9554/q/incoming/messages?multiple=true" -d @batch.txt
+$ curl "http://127.0.0.1:9554/q/incoming/messages?multiple=true" -d @batch.txt
 {
   "responseCode" : 422,
   "message" : "Expected 27 bytes, only read 26 while reading payload",
@@ -221,7 +221,7 @@ thresholds, <em>warnAfter</em> and/or <em>errorAfter</em> respectively:</p>
 
 {% highlight bash %}
 # The current WARN or ERROR status is reflected in the queue status
-$ curl -XPOST http://127.0.0.1:9554/q/mentions -d warnAfter=60 -d errorAfter=5:00
+$ curl http://127.0.0.1:9554/q/mentions -d warnAfter=60 -d errorAfter=5:00
 {
 "id" : "mentions",
 ...
@@ -387,7 +387,7 @@ exchange).</p>
 
 {% highlight bash %}
 # output messages to foobar RabbitMQ exchange
-$ curl -XPOST http://127.0.0.1:9554/q/foo/out/rabbit -d type=rabbitmq \
+$ curl http://127.0.0.1:9554/q/foo/out/rabbit -d type=rabbitmq \
     -d url=amqp://127.0.0.1 -d queues=foo,bar -d exchange=foobar
 {% endhighlight %}
 
@@ -399,9 +399,9 @@ this (at creation time or later):</p>
 
 {% highlight bash %}
 # output messages from 10h20 today
-$ curl -XPOST http://127.0.0.1:9554/q/foo/out -d from=10:20
+$ curl http://127.0.0.1:9554/q/foo/out -d from=10:20
 # turn the output off
-$ curl -XPOST http://127.0.0.1:9554/q/foo/out -d enabled=false
+$ curl http://127.0.0.1:9554/q/foo/out -d enabled=false
 {% endhighlight %}
 
 <p>Use the <em>to</em> or <em>toId</em> parameters to have the output stop automatically on reaching the specified
@@ -409,16 +409,16 @@ timestamp or id respectively:</p>
 
 {% highlight bash %}
 # output messages from 10h20 to 10h30 (exclusive) today
-$ curl -XPOST http://127.0.0.1:9554/q/foo/out -d from=10:20 -d to=10:30
+$ curl http://127.0.0.1:9554/q/foo/out -d from=10:20 -d to=10:30
 {% endhighlight %}
 
 <p>Use the <em>limit</em> parameter to have the output stop (disable itself) after outputting that many messages:</p>
 
 {% highlight bash %}
 # output 1000 messages from 10h20 today then stop
-$ curl -XPOST http://127.0.0.1:9554/q/foo/out -d from=10:20 -d limit=1000
+$ curl http://127.0.0.1:9554/q/foo/out -d from=10:20 -d limit=1000
 # output another 1000 messages from the current position
-$ curl -XPOST http://127.0.0.1:9554/q/foo/out -d limit=1000 -d enabled=true
+$ curl http://127.0.0.1:9554/q/foo/out -d limit=1000 -d enabled=true
 {% endhighlight %}
 
 <h3><a name="output_status"></a>Output Status</h3>
@@ -459,7 +459,7 @@ $ curl http://127.0.0.1:9554/q/mentions
   ...
   "maxSize" : "20 GB",
 }
-$ curl -XPOST http://127.0.0.1:9554/q/mentions -d maxSize=40g
+$ curl http://127.0.0.1:9554/q/mentions -d maxSize=40g
 {% endhighlight %}
 
 <h3><a name="output_alerts"></a>Output Alerts</h3>
@@ -469,7 +469,7 @@ warnAfter and/or errorAfter respectively:</p>
 
 {% highlight bash %}
 # The current WARN or ERROR status is reflected in the output status
-$ curl -XPOST http://127.0.0.1:9554/q/mentions/out/rabbit -d warnAfter=10 -d errorAfter=20
+$ curl http://127.0.0.1:9554/q/mentions/out/rabbit -d warnAfter=10 -d errorAfter=20
 {
   "id" : "rabbit",
   ...
@@ -500,9 +500,9 @@ the durability of the queue(s) can be set:</p>
 
 {% highlight bash %}
 # default exchange type is fanout and is durable, this will create non-durable exchange
-$ curl -XPOST http://127.0.0.1:9554/q/foo/out/rabbit -d exchange=foobar#fanout#false
+$ curl http://127.0.0.1:9554/q/foo/out/rabbit -d exchange=foobar#fanout#false
 # queue foo is non-durable, bar is durable
-$ curl -XPOST http://127.0.0.1:9554/q/foo/out/rabbit -d queues=foo#false,bar#true
+$ curl http://127.0.0.1:9554/q/foo/out/rabbit -d queues=foo#false,bar#true
 {% endhighlight %}
 
 <p>Other parameters (with defaults):</p>
@@ -534,7 +534,7 @@ is very easy to setup an input to backup data arriving on a RabbitMQ queue to be
 # create a qdb queue 'backup'
 $ curl -XPOST http://127.0.0.1:9554/q/backup
 # fetch messages from RabbitMQ queue 'backup' bound to exchange 'incoming'
-$ curl -XPOST http://127.0.0.1:9554/q/backup/in/rabbit -d type=rabbitmq \
+$ curl http://127.0.0.1:9554/q/backup/in/rabbit -d type=rabbitmq \
     -d url=amqp://127.0.0.1 -d queue=backup -d exchange=incoming
 {% endhighlight %}
 
@@ -577,7 +577,7 @@ warnAfter and/or errorAfter respectively:</p>
 
 {% highlight bash %}
 # The current WARN or ERROR status is reflected in the input status
-$ curl -XPOST http://127.0.0.1:9554/q/backup/in/rabbit -d warnAfter=10 -d errorAfter=20
+$ curl http://127.0.0.1:9554/q/backup/in/rabbit -d warnAfter=10 -d errorAfter=20
 {
   "id" : "rabbit",
   ...
@@ -604,9 +604,9 @@ exchange and the durability of the queue(s) can be set:</p>
 
 {% highlight bash %}
 # default exchange type is fanout and is durable, this will create non-durable exchange
-$ curl -XPOST http://127.0.0.1:9554/q/backup/in/rabbit -d exchange=incoming#fanout#false
+$ curl http://127.0.0.1:9554/q/backup/in/rabbit -d exchange=incoming#fanout#false
 # queue foo is non-durable, bar is durable
-$ curl -XPOST http://127.0.0.1:9554/q/backup/in/rabbit -d queue=backup#false
+$ curl http://127.0.0.1:9554/q/backup/in/rabbit -d queue=backup#false
 {% endhighlight %}
 
 <p>Other parameters (with defaults):</p>
@@ -660,7 +660,7 @@ is supplied then admin:admin is assumed. Non-admin users can only access databas
 
 {% highlight bash %}
 # create an admin user "david" with password "secret"
-$ curl -XPOST http://127.0.0.1:9554/users/david -d admin=true -d password=secret
+$ curl http://127.0.0.1:9554/users/david -d admin=true -d password=secret
 # list all users
 $ curl http://127.0.0.1:9554/users
 # get details of the "david" user
@@ -668,7 +668,7 @@ $ curl http://127.0.0.1:9554/users/david
 # authenticate as "david" and list all databases visible to "david"
 $ curl --user david:secret http://127.0.0.1:9554/db
 # change the password for the "admin" user
-$ curl -XPOST http://127.0.0.1:9554/users/admin -d password=oink
+$ curl http://127.0.0.1:9554/users/admin -d password=oink
 # list users
 $ curl --user admin:oink http://127.0.0.1:9554/users
 {% endhighlight %}
