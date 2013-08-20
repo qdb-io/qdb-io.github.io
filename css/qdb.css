@@ -14,7 +14,7 @@
     margin-right: 20px;
     margin-top: 2px;
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 0;
 }
 
 .follow-qdbio img {
@@ -35,19 +35,10 @@ ul.bullets li:before {
     content: '\00BB';
 }
 
-.diag {
+img.diag {
     float: left;
     margin-bottom: 20px;
-}
-
-.diag-left {
-    margin-right: 60px;
-    max-width: 378px;
-}
-
-.diag > img {
-    display: block;
-    margin-bottom: 20px;
+    margin-right: 20px;
 }
 
 .param-table {
@@ -142,9 +133,12 @@ ul.bullets li:before {
 }
 
 @media (max-width: 768px) {
+    li {
+        line-height: 20px;
+    }
+
     .follow-qdbio {
         margin-right: 10px;
-        margin-bottom: 10px;
     }
 
     .follow-qdbio img {
@@ -199,5 +193,12 @@ ul.bullets li:before {
     .api .right-col {
         display: block;
         width: 100%;
+    }
+
+    img.diag {
+        float: none;
+        display: block;
+        margin-right: 0;
+        margin-bottom: 10px;
     }
 }

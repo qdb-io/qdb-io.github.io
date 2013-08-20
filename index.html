@@ -14,57 +14,52 @@ menu: /
     <li>Replay messages by timestamp or id</li>
     <li>Use on its own or as a front end to <a href="http://www.rabbitmq.com/">RabbitMQ</a></li>
 </ul>
-
 <div style="clear: both"></div>
 
-<div class="diag diag-left">
-    <h2>Backup/Replay RabbitMQ Queue</h2>
-    <img src="/img/rabbitmq_backup.png" width="267" height="114"/>
-    <ul class="bullets">
-        <li>Backup messages from a queue</li>
-        <li>Replay by timestamp as needed</li>
-        <li>Watch incoming messages with curl</li>
-        <li>Alerts and monitoring</li>
-    </ul>
-</div>
-
-<div class="diag">
-    <h2>Push To Remote RabbitMQ Server</h2>
-    <img src="/img/push_to_rabbitmq.png" width="378" height="113"/>
-    <ul class="bullets">
-        <li>Simple HTTP POST to send messages to RabbitMQ</li>
-        <li>Your app is protected from network partitions or RabbitMQ downtime</li>
-        <li>Replay by timestamp if downstream processing fails</li>
-        <li>Easier than running RabbitMQ on both servers with a shovel</li>
-        <li>Low memory footprint (run on an EC2 micro instance)</li>
-    </ul>
-</div>
-
+<h2>Backup/Replay RabbitMQ Queue</h2>
+<img src="/img/rabbitmq_backup.png" width="267" height="114" class="diag"/>
+<ul class="bullets">
+    <li>Backup messages from a queue</li>
+    <li>Replay by timestamp as needed</li>
+    <li>Watch incoming messages with curl</li>
+    <li>Alerts and monitoring</li>
+</ul>
 <div style="clear: both"></div>
-
-<p>The following example creates a queue and configures it to output to RabbitMQ:</p>
 
 {% highlight bash %}
-$ curl -XPOST http://127.0.0.1:9554/q/incoming
-$ curl http://127.0.0.1:9554/q/incoming/out/rabbit \
-    -d type=rabbitmq -d url=amqp://127.0.0.1 -d queues=incoming
-# these operations are idempotent i.e. if the object already exists it is updated
+# create a qdb queue 'backup'
+$ curl http://127.0.0.1:9554/q/backup -d maxSize=10g
+# consume messages from RabbitMQ queue 'backup' bound to exchange 'incoming'
+$ curl http://127.0.0.1:9554/q/backup/in/rabbit -d type=rabbitmq \
+-d url=amqp://127.0.0.1 -d queue=backup -d exchange=incoming
 {% endhighlight %}
 
-<p>Its easy to POST messages to the queue:</p>
+<p>To restore messages from backup:</p>
 
 {% highlight bash %}
+# output messages from 10h20 today to RabbitMQ 'recovered' exchange and queue
+$ curl http://127.0.0.1:9554/q/backup/out/rabbit -d type=rabbitmq \
+-d url=amqp://127.0.0.1 -d queues=recovered -d from=10:20
+{% endhighlight %}
+
+<h2>Push To Remote RabbitMQ Server</h2>
+<img src="/img/push_to_rabbitmq.png" width="378" height="115" class="diag"/>
+<ul class="bullets">
+    <li>Simple HTTP POST to send messages to RabbitMQ</li>
+    <li>Your app is protected from network partitions or RabbitMQ downtime</li>
+    <li>Easier than running RabbitMQ on both servers with a shovel</li>
+    <li>Low memory footprint (run on an EC2 micro instance)</li>
+</ul>
+<div style="clear: both"></div>
+
+{% highlight bash %}
+# create a qdb queue 'incoming'
+$ curl http://127.0.0.1:9554/q/incoming -d maxSize=100g
+# output messages to RabbitMQ 'incoming' exchange and queue
+$ curl http://127.0.0.1:9554/q/incoming/out/rabbit -d type=rabbitmq \
+-d url=amqp://127.0.0.1 -d queues=incoming
+# POST contents of message.json to qdb and RabbitMQ
 $ curl http://127.0.0.1:9554/q/incoming/messages?routingKey=abc -d @message.json
-# the contents of message.json are now in RabbitMQ
-{% endhighlight %}
-
-<p>And stream them out again or redeliver:</p>
-
-{% highlight bash %}
-$ curl http://127.0.0.1:9554/q/incoming/messages?from=10:13
-# messages since 10:13 today are streamed to the console
-$ curl http://127.0.0.1:9554/q/incoming/out/rabbit -d from=2013-06-24
-# messages since 24 June 2013 are redelivered to RabbitMQ
 {% endhighlight %}
 
 <p>
