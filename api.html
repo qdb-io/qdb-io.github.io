@@ -38,12 +38,14 @@ $ curl -H "Content-Type: application/json" http://127.0.0.1:9554/q/foo -d @foo.j
             <li><a href="#queue_status">Queue Status</a></li>
             <li><a href="#queue_alerts">Queue Alerts</a></li>
             <li><a href="#retrieving">Retrieving Messages</a></li>
+            <li><a href="#filtering">Filtering Messages</a></li>
             <li><a href="#timelines">Timelines</a></li>
         </ul></li>
         <li><a href="#outputs">Outputs</a></li>
         <li><ul>
             <li><a href="#output_status">Output Status</a></li>
             <li><a href="#output_alerts">Output Alerts</a></li>
+            <li><a href="#output_filtering">Filtering Messages</a></li>
             <li><a href="#output_rabbitmq">RabbitMQ</a></li>
         </ul></li>
         <li><a href="#inputs">Inputs</a></li>
@@ -344,6 +346,32 @@ $ curl "http://127.0.0.1:9554/q/incoming/messages?from=19:47&to=20:00"
     </table>
 </div>
 
+<h3><a name="filtering"></a>Filtering</h3>
+
+<p>QDB can filter messages on routing key and/or payload using the <em>routingKey</em> and <em>grep</em> parameters
+respectively:</p>
+
+{% highlight bash %}
+# Fetch messages containing a line starting with a number
+# The -g option to curl stops it from messing with [] and {}
+# The %2b is the + character url encoded
+$ curl -g "http://127.0.0.1:9554/q/incoming/messages?grep=^[0-9]%2b"
+# Fetch messages with routingKey matching a RabbitMQ expression
+# The hash (#) must be url encoded as %23
+$ curl "http://127.0.0.1:9554/q/incoming/messages?routingKey=foo.*.%23"
+# Fetch messages with routingKey matching a Java regular expression
+$ curl -g "http://127.0.0.1:9554/q/incoming/messages?routingKey=/^[0-9]%2b/"
+{% endhighlight %}
+
+<p>The routingKey expression is treated as Java regular expression if it starts with a slash. Otherwise it follows
+RabbitMQ conventions i.e. the string is split into words at '.' characters and * matches zero or more words,
+# matches exactly one word.</p>
+
+<p>The grep and routingKey parameters can be used together in which case both must match.</p>
+
+<p>When grep is used the message is converted from bytes to a string using the encoding specified in the
+contentType of the queue with UTF8 as the default.</p>
+
 <h3><a name="timelines"></a>Timelines</h3>
 
 <p>QBD maintains an efficient index of each queue by timestamp and message id. You can peek at this index using the
@@ -399,9 +427,9 @@ this (at creation time or later):</p>
 
 {% highlight bash %}
 # output messages from 10h20 today
-$ curl http://127.0.0.1:9554/q/foo/out -d from=10:20
+$ curl http://127.0.0.1:9554/q/foo/out/rabbit -d from=10:20
 # turn the output off
-$ curl http://127.0.0.1:9554/q/foo/out -d enabled=false
+$ curl http://127.0.0.1:9554/q/foo/out/rabbit -d enabled=false
 {% endhighlight %}
 
 <p>Use the <em>to</em> or <em>toId</em> parameters to have the output stop automatically on reaching the specified
@@ -409,16 +437,16 @@ timestamp or id respectively:</p>
 
 {% highlight bash %}
 # output messages from 10h20 to 10h30 (exclusive) today
-$ curl http://127.0.0.1:9554/q/foo/out -d from=10:20 -d to=10:30
+$ curl http://127.0.0.1:9554/q/foo/out/rabbit -d from=10:20 -d to=10:30
 {% endhighlight %}
 
 <p>Use the <em>limit</em> parameter to have the output stop (disable itself) after outputting that many messages:</p>
 
 {% highlight bash %}
 # output 1000 messages from 10h20 today then stop
-$ curl http://127.0.0.1:9554/q/foo/out -d from=10:20 -d limit=1000
+$ curl http://127.0.0.1:9554/q/foo/out/rabbit -d from=10:20 -d limit=1000
 # output another 1000 messages from the current position
-$ curl http://127.0.0.1:9554/q/foo/out -d limit=1000 -d enabled=true
+$ curl http://127.0.0.1:9554/q/foo/out/rabbit -d limit=1000 -d enabled=true
 {% endhighlight %}
 
 <h3><a name="output_status"></a>Output Status</h3>
@@ -490,6 +518,20 @@ $ curl http://127.0.0.1:9554/q/mentions/out/rabbit -d warnAfter=10 -d errorAfter
 23:35:56.540 [output-status-monitor] ERROR ... - /q/mentions/out/rabbit: 22.5% of queue used
 23:40:56.540 [output-status-monitor] ERROR ... - /q/mentions/out/rabbit: 26.3% of queue used
 23:42:12.537 [output-status-monitor] INFO  ... - /q/mentions/out/rabbit has recovered
+{% endhighlight %}
+
+<h3><a name="output_filtering"></a>Output Filtering</h3>
+
+<p>Outputs can filter messages by routingKey and/or grep on the message body as described in <a href="#filtering">queues</a>.</p>
+
+{% highlight bash %}
+# Output messages from 10h20 today containing a line starting with a number
+# The %2b is the + character url encoded
+$ curl http://127.0.0.1:9554/q/foo/out/rabbit -d from=10:20 -d grep=^[0-9]%2b
+# Output messages with routingKey matching a RabbitMQ expression
+$ curl http://127.0.0.1:9554/q/foo/out/rabbit -d "routingKey=foo.*"
+# Fetch messages with routingKey matching a Java regular expression
+$ curl http://127.0.0.1:9554/q/foo/out/rabbit -d "routingKey=/^[0-9]%2b/"
 {% endhighlight %}
 
 <h3><a name="output_rabbitmq"></a>RabbitMQ</h3>
