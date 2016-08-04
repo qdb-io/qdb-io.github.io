@@ -11,7 +11,9 @@ class: api
     <p>The QDB API follows RESTful principles and you don't need any driver libraries to communicate with it. HTTP POST
         does create or update, PUT does update only, DELETE deletes stuff and GET retrieves resources. All endpoints accept
         JSON data and/or URL-encoded form data and most return JSON. The examples in this documentation use
-        <a href="http://curl.haxx.se/">curl</a>, a utility for making HTTP requests from the command line.</p>
+        <a href="http://curl.haxx.se/">curl</a>, a utility for making HTTP requests from the command line.
+        A Python wrapper (<a href="https://pypi.python.org/pypi/pyqdb">pyqdb</a>) is also available.
+    </p>
 
 {% highlight bash %}
 # create or update a queue "foo" with max size of 100 gb
